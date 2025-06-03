@@ -1,4 +1,6 @@
 ### frontend.py: module for the frontend code
+import webview
+
 html = """
 <!DOCTYPE html>
 <html lang="en">
@@ -89,8 +91,17 @@ html = """
         const filePreview = document.getElementById('filePreview');
         const messageArea = document.getElementById('messageArea');
 
+        async function toB64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
         // Function to be called when files are selected/dropped
-        function handleFiles(files) {
+        async function handleFiles(files) {
             console.log('Files selected:', files);
             messageArea.innerHTML = ''; // Clear previous messages
             filePreview.innerHTML = ''; // Clear previous previews
@@ -113,7 +124,8 @@ html = """
             messageArea.innerHTML = '<p class="text-green-600 font-medium">Files ready for upload (simulated).</p>';
 
             // Example of calling your actual upload function:
-            pywebview.api.print_hello()
+            const b64 = await toB64(files[0]);
+            const result = await pywebview.api.add_dataframe(b64);
         }
 
         // Prevent default drag behaviors
@@ -135,6 +147,7 @@ html = """
         ['dragleave', 'drop'].forEach(eventName => {
             dropZone.addEventListener(eventName, unhighlight, false);
         });
+
 
         function highlight(e) {
             dropZone.classList.add('drag-over');
