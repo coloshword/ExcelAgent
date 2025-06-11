@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Excel Agent Chat</title>
+  <style>
+    body{font:14px/1.4 system-ui, sans-serif;margin:0;padding:1rem;background:#f5f5f5}
+    #chat{height:85vh;overflow-y:auto;background:#fff;border:1px solid #ccc;padding:1rem}
+    .bubble{margin:.5rem 0;padding:.5rem .75rem;border-radius:.8rem;max-width:90%}
+    .user{background:#d1e7dd;margin-left:auto}
+    .bot{background:#e7e7e7}
+    #form{display:flex;gap:.5rem;margin-top:.5rem}
+    textarea{flex:1;resize:none;padding:.5rem}
+    button{padding:.5rem .75rem}
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+
+  <form id="form">
+    <textarea id="input" rows="2" placeholder="Type your message…"></textarea>
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const chatDiv = document.getElementById('chat');
+    const form    = document.getElementById('form');
+    const input   = document.getElementById('input');
+
+    // helper to append bubbles
+    function addBubble(text, cls){
+      const div = document.createElement('div');
+      div.className = `bubble ${cls}`;
+      div.textContent = text;
+      chatDiv.appendChild(div);
+      chatDiv.scrollTop = chatDiv.scrollHeight;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = input.value.trim();
+      if(!msg) return;
+      addBubble(msg, 'user');
+      input.value = '';
+
+      // call Python
+      addBubble('…', 'bot');
+      const botBubble = chatDiv.lastChild;
+
+      try {
+        const reply = await window.pywebview.api.chat(msg);
+        botBubble.textContent = reply;
+      } catch (err) {
+        botBubble.textContent = '⚠️ Error: ' + err;
+      }
+    });
+  </script>
+</body>
+</html>
