@@ -23,6 +23,15 @@
 goal: run the two models using llama cpp
 - let's make a chat interface really quickly... 
 
+06/12/25:
+--
+goal: once uploaded dataframe,
+
+- define a very simple task, and have the LM write some code for it, return it and run the code on the dataframe  -- (works)
+
+06/14/25:
+--
+include a chat area to provide a task for it to do, and have it run it...
 
 
 

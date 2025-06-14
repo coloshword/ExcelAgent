@@ -54,3 +54,14 @@ The input df looks like this
 0         1 2025-05-31  BREAD
 1         2 2025-06-30  BREAD
 2         3 2025-05-31  APPLE
+
+
+
+06/12 prompts:
+
+simple_request = """
+Below is input_df:
+{dataframe}
+
+Access the dataframe using the variable input_df. If you use a library, make sure to import it. input_df is of type dataframe. Given input_df, write code (not a function) that adds a column called 'Ones', where the value for each cell is 1, as int. Please return ONLY VALID CODE, and code ONLY. No writing. Your output should run in the interpreter AS IS
+"""
