@@ -24,7 +24,7 @@ if __name__ == "__main__":
     webview.settings['ALLOW_DOWNLOADS'] = True
     webview.create_window(
             title="Excel Agent",
-            url="static/import_file.html",
+            url="static/index.html",
             js_api= webview_api.WebviewAPI(),
             width=480,
             height=600,

@@ -34,4 +34,26 @@ goal: once uploaded dataframe,
 include a chat area to provide a task for it to do, and have it run it...
 
 
+06/17/25:
+--
+GOAL:
+- attach a sheet, give it a task, and have it execute and output the download link back to you 
+    - we can now attach a sheet 
+    - now what we need to do is have it pass in the sheet along with some predefined instructions (let's have it have a separate instructions thread) 
 
+    def test_execute_code(self):
+    
+        simple_request = """
+        Below is input_df:
+        {dataframe}
+
+        Access the dataframe using the variable input_df. input_df is of type dataframe. YOU ALREADY HAVE input_df, DONOT REDEFINE IT. ASSUME input_df is IN MEMORY. Given input_df, write PYTHON code (not a function) that adds a column called 'Ones', where the value for each cell is 1, as int. Please return ONLY VALID CODE, and code ONLY. At the end, define a variable called "output_df", which should be the output of the completed task. Make sure you have output_df. Output only code. 
+        """.format(dataframe=self.dataframe.to_string())
+        result = self.chat(simple_request)
+        output_df = code_executor.execute(result, self.dataframe)
+        # output_df is the dataframe to return 
+        output_bytes = utils.df_to_excel_bytes(output_df)
+        # convert output_bytes to b64
+        bytes_content = output_bytes.getvalue()
+        encoded_bytes = base64.b64encode(bytes_content).decode('utf-8')
+        return encoded_bytes

@@ -5,3 +5,4 @@ venv
 llama.cpp
 phi_models
 qwen_coder
+llama-server

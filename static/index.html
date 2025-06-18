@@ -2,58 +2,189 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Excel Agent Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat</title>
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
   <style>
-    body{font:14px/1.4 system-ui, sans-serif;margin:0;padding:1rem;background:#f5f5f5}
-    #chat{height:85vh;overflow-y:auto;background:#fff;border:1px solid #ccc;padding:1rem}
-    .bubble{margin:.5rem 0;padding:.5rem .75rem;border-radius:.8rem;max-width:90%}
-    .user{background:#d1e7dd;margin-left:auto}
-    .bot{background:#e7e7e7}
-    #form{display:flex;gap:.5rem;margin-top:.5rem}
-    textarea{flex:1;resize:none;padding:.5rem}
-    button{padding:.5rem .75rem}
+    body { font-family: 'Inter', sans-serif; }
+    /* slim scrollbar */
+    #chat-container::-webkit-scrollbar { width: 6px; }
+    #chat-container::-webkit-scrollbar-track { background: #f1f1f1; }
+    #chat-container::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
+    #chat-container::-webkit-scrollbar-thumb:hover { background: #555; }
   </style>
 </head>
-<body>
-  <div id="chat"></div>
+<body class="bg-gray-100 flex items-center justify-center h-screen">
+  <div class="w-full max-w-2xl h-[90vh] bg-white rounded-xl shadow-lg flex flex-col p-4">
 
-  <form id="form">
-    <textarea id="input" rows="2" placeholder="Type your message…"></textarea>
-    <button type="submit">Send</button>
-  </form>
+    <!-- Header -->
+    <header class="border-b pb-4 mb-4">
+      <h1 class="text-2xl font-bold text-gray-800">Chat</h1>
+      <p class="text-sm text-gray-500">Your assistant for spreadsheet tasks.</p>
+    </header>
 
+    <!-- Chat area -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 rounded-lg">
+      <!-- Welcome bubble -->
+      <div class="flex justify-start">
+        <div class="bg-indigo-500 text-white p-3 rounded-lg max-w-xs">
+          <p>Hello! How can I help you with your Excel file today? You can ask me to analyze data, generate charts, or perform calculations. Just attach a file and let me know what you need.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Input / attachment -->
+    <footer class="mt-4 pt-4 border-t">
+
+      <!-- Attachment preview -->
+      <div id="file-preview" class="hidden items-center bg-gray-200 p-2 rounded-lg mb-2 text-sm">
+        <i class="fas fa-file-excel text-green-600 mr-2"></i>
+        <span id="file-name" class="text-gray-700"></span>
+        <button id="remove-file-btn" class="ml-auto text-red-500 hover:text-red-700">
+          <i class="fas fa-times-circle"></i>
+        </button>
+      </div>
+
+      <!-- Form -->
+      <form id="chat-form" class="flex items-center space-x-3">
+        <input id="file-input" type="file" accept=".xlsx,.xls,.csv" class="hidden">
+        <button id="attach-btn" type="button" class="px-4 py-2 bg-gray-200 text-gray-600 rounded-lg hover:bg-gray-300 transition-colors">
+          <i class="fas fa-paperclip"></i>
+        </button>
+
+        <textarea id="message-input" rows="1" placeholder="Type your message or attach a file..." class="flex-1 p-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+
+        <button id="send-btn" type="submit" disabled class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:bg-indigo-300">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </form>
+    </footer>
+  </div>
+
+  <!-- Logic -->
   <script>
-    const chatDiv = document.getElementById('chat');
-    const form    = document.getElementById('form');
-    const input   = document.getElementById('input');
+    (() => {
+      /* ---------- DOM Caches ---------- */
+      const chatContainer = document.getElementById('chat-container');
+      const chatForm      = document.getElementById('chat-form');
+      const messageInput  = document.getElementById('message-input');
+      const sendBtn       = document.getElementById('send-btn');
+      const attachBtn     = document.getElementById('attach-btn');
+      const fileInput     = document.getElementById('file-input');
+      const filePreview   = document.getElementById('file-preview');
+      const fileNameText  = document.getElementById('file-name');
+      const removeFileBtn = document.getElementById('remove-file-btn');
 
-    // helper to append bubbles
-    function addBubble(text, cls){
-      const div = document.createElement('div');
-      div.className = `bubble ${cls}`;
-      div.textContent = text;
-      chatDiv.appendChild(div);
-      chatDiv.scrollTop = chatDiv.scrollHeight;
-    }
+      /* ---------- State ---------- */
+      let attachedFile = null;     // File object
+      let fileB64      = null;     // Base-64 string
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = input.value.trim();
-      if(!msg) return;
-      addBubble(msg, 'user');
-      input.value = '';
+      /* ---------- Helpers ---------- */
+      const scrollToBottom = () => chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      // call Python
-      addBubble('…', 'bot');
-      const botBubble = chatDiv.lastChild;
+      /** Create and append a chat bubble. */
+      const addBubble = (html, fromUser = false) => {
+        const wrap = document.createElement('div');
+        wrap.className = `flex ${fromUser ? 'justify-end' : 'justify-start'}`;
 
-      try {
-        const reply = await window.pywebview.api.chat(msg);
-        botBubble.textContent = reply;
-      } catch (err) {
-        botBubble.textContent = '⚠️ Error: ' + err;
-      }
-    });
+        const bubble = document.createElement('div');
+        bubble.className = `p-3 rounded-lg max-w-md ${fromUser ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`;
+        bubble.innerHTML = html;
+
+        wrap.appendChild(bubble);
+        chatContainer.appendChild(wrap);
+        scrollToBottom();
+        return bubble;
+      };
+
+      /** Enable/disable send button. */
+      const updateSendState = () => {
+        const hasMessage = messageInput.value.trim().length > 0;
+        sendBtn.disabled = !(hasMessage || attachedFile);
+      };
+
+      /** Clear the current attachment UI + state. */
+      const clearAttachment = () => {
+        attachedFile = null;
+        fileB64 = null;
+        fileInput.value = '';
+        filePreview.classList.add('hidden');
+        filePreview.classList.remove('flex');
+        updateSendState();
+      };
+
+      /** Read a File object and return base-64 string. */
+      const fileToBase64 = (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const uint8 = new Uint8Array(e.target.result);
+            const binary = String.fromCharCode(...uint8);
+            resolve(btoa(binary));
+          };
+          reader.onerror = reject;
+          reader.readAsArrayBuffer(file);
+        });
+
+      /* ---------- Event bindings ---------- */
+      // text input
+      messageInput.addEventListener('input', updateSendState);
+
+      // attach button
+      attachBtn.addEventListener('click', () => fileInput.click());
+
+      // file chosen
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        attachedFile = file;
+        fileNameText.textContent = file.name;
+        filePreview.classList.remove('hidden');
+        filePreview.classList.add('flex');
+        fileB64 = await fileToBase64(file);
+        updateSendState();
+      });
+
+      // remove file click
+      removeFileBtn.addEventListener('click', clearAttachment);
+
+      /* ---------- Form submit ---------- */
+      chatForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const message = messageInput.value.trim();
+        if (!message && !attachedFile) return;
+
+        // user bubble
+        addBubble(message || `<i>File: ${attachedFile.name}</i>`, true);
+
+        // reset message box
+        messageInput.value = '';
+        updateSendState();
+
+        // bot loading bubble
+        const botBubble = addBubble('<i class="fas fa-spinner fa-spin"></i>');
+
+        try {
+          const reply = await window.pywebview.api.chat(
+            message,
+            fileB64,
+            attachedFile ? attachedFile.name : null          // <-- filename now passed
+          );
+          botBubble.textContent = reply;
+        } catch (err) {
+          botBubble.innerHTML = `⚠️ <strong>Error:</strong> ${err}`;
+          console.error(err);
+        } finally {
+          clearAttachment(); // always reset attachment
+        }
+      });
+    })();
   </script>
 </body>
 </html>
