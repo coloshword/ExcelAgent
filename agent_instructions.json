@@ -1,3 +1,3 @@
 {
-    "basic_instruction": "This is a basic instruction"
+    "basic_instruction1": "You are an agent that excels at python coding, specifically working with pandas dataframes. For each request, ONLY return python code, nothing else. Do not explain or add extra text. Here is your task: You are given input_df, a variable. Please access the variable using input_df. DONOT redefine the variable. input_df looks like this \n{input_df_view}. After accomplishing the task, you will need to define a variable ,ouput_df, which represents the task but completed. Ensure that this variable is defined in your code. \nHere is your task. Good luck!: \n{task}."
 }

@@ -66,125 +66,149 @@
       </form>
     </footer>
   </div>
+<script>
+(() => {
+  /* ---------- DOM Caches ---------- */
+  const chatContainer = document.getElementById('chat-container');
+  const chatForm      = document.getElementById('chat-form');
+  const messageInput  = document.getElementById('message-input');
+  const sendBtn       = document.getElementById('send-btn');
+  const attachBtn     = document.getElementById('attach-btn');
+  const fileInput     = document.getElementById('file-input');
+  const filePreview   = document.getElementById('file-preview');
+  const fileNameText  = document.getElementById('file-name');
+  const removeFileBtn = document.getElementById('remove-file-btn');
 
-  <!-- Logic -->
-  <script>
-    (() => {
-      /* ---------- DOM Caches ---------- */
-      const chatContainer = document.getElementById('chat-container');
-      const chatForm      = document.getElementById('chat-form');
-      const messageInput  = document.getElementById('message-input');
-      const sendBtn       = document.getElementById('send-btn');
-      const attachBtn     = document.getElementById('attach-btn');
-      const fileInput     = document.getElementById('file-input');
-      const filePreview   = document.getElementById('file-preview');
-      const fileNameText  = document.getElementById('file-name');
-      const removeFileBtn = document.getElementById('remove-file-btn');
+  /* ---------- State ---------- */
+  let attachedFile = null;     // File object
+  let fileB64      = null;     // Base-64 string
 
-      /* ---------- State ---------- */
-      let attachedFile = null;     // File object
-      let fileB64      = null;     // Base-64 string
+  /* ---------- Helpers ---------- */
+  const scrollToBottom = () => chatContainer.scrollTop = chatContainer.scrollHeight;
 
-      /* ---------- Helpers ---------- */
-      const scrollToBottom = () => chatContainer.scrollTop = chatContainer.scrollHeight;
+  /** Append a chat bubble. Returns the bubble element so we can mutate it later. */
+  const addBubble = (html, fromUser = false) => {
+    const wrap   = document.createElement('div');
+    wrap.className = `flex ${fromUser ? 'justify-end' : 'justify-start'}`;
 
-      /** Create and append a chat bubble. */
-      const addBubble = (html, fromUser = false) => {
-        const wrap = document.createElement('div');
-        wrap.className = `flex ${fromUser ? 'justify-end' : 'justify-start'}`;
+    const bubble = document.createElement('div');
+    bubble.className = `p-3 rounded-lg max-w-md ${fromUser ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`;
+    bubble.innerHTML = html;
 
-        const bubble = document.createElement('div');
-        bubble.className = `p-3 rounded-lg max-w-md ${fromUser ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-800'}`;
-        bubble.innerHTML = html;
+    wrap.appendChild(bubble);
+    chatContainer.appendChild(wrap);
+    scrollToBottom();
+    return bubble;
+  };
 
-        wrap.appendChild(bubble);
-        chatContainer.appendChild(wrap);
-        scrollToBottom();
-        return bubble;
-      };
+  /** Spinner wrapper for any async API call. */
+    const runWithSpinner = async (promise) => {
+      const spinnerBubble = addBubble('<i class="fas fa-spinner fa-spin"></i>');
+      try {
+        const res = await promise;
 
-      /** Enable/disable send button. */
-      const updateSendState = () => {
-        const hasMessage = messageInput.value.trim().length > 0;
-        sendBtn.disabled = !(hasMessage || attachedFile);
-      };
-
-      /** Clear the current attachment UI + state. */
-      const clearAttachment = () => {
-        attachedFile = null;
-        fileB64 = null;
-        fileInput.value = '';
-        filePreview.classList.add('hidden');
-        filePreview.classList.remove('flex');
-        updateSendState();
-      };
-
-      /** Read a File object and return base-64 string. */
-      const fileToBase64 = (file) =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (e) => {
-            const uint8 = new Uint8Array(e.target.result);
-            const binary = String.fromCharCode(...uint8);
-            resolve(btoa(binary));
-          };
-          reader.onerror = reject;
-          reader.readAsArrayBuffer(file);
-        });
-
-      /* ---------- Event bindings ---------- */
-      // text input
-      messageInput.addEventListener('input', updateSendState);
-
-      // attach button
-      attachBtn.addEventListener('click', () => fileInput.click());
-
-      // file chosen
-      fileInput.addEventListener('change', async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        attachedFile = file;
-        fileNameText.textContent = file.name;
-        filePreview.classList.remove('hidden');
-        filePreview.classList.add('flex');
-        fileB64 = await fileToBase64(file);
-        updateSendState();
-      });
-
-      // remove file click
-      removeFileBtn.addEventListener('click', clearAttachment);
-
-      /* ---------- Form submit ---------- */
-      chatForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const message = messageInput.value.trim();
-        if (!message && !attachedFile) return;
-
-        // user bubble
-        addBubble(message || `<i>File: ${attachedFile.name}</i>`, true);
-
-        // reset message box
-        messageInput.value = '';
-        updateSendState();
-
-        // bot loading bubble
-        const botBubble = addBubble('<i class="fas fa-spinner fa-spin"></i>');
-
-        try {
-          const reply = await window.pywebview.api.chat(
-            message,
-            fileB64,
-            attachedFile ? attachedFile.name : null          // <-- filename now passed
-          );
-          botBubble.textContent = reply;
-        } catch (err) {
-          botBubble.innerHTML = `⚠️ <strong>Error:</strong> ${err}`;
-          console.error(err);
-        } finally {
-          clearAttachment(); // always reset attachment
+        /* ----- RESPONSE HANDLING ----- */
+        if (res && typeof res === 'object' && res.filename && res.content) {
+          /* turn result into a download button */
+          spinnerBubble.innerHTML = `
+            <a
+              href="data:application/octet-stream;base64,${res.content}"
+              download="${res.filename}"
+              class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              <i class="fas fa-download mr-2"></i>${res.filename}
+            </a>`;
+        } else {
+          /* plain-text response */
+          spinnerBubble.textContent = res ?? '[No response]';
         }
-      });
-    })();
-  </script>
+
+        return res;
+      } catch (err) {
+        spinnerBubble.innerHTML = `⚠️ <strong>Error:</strong> ${err}`;
+        throw err;
+      }
+    };
+  /** Enable/disable send button. */
+  const updateSendState = () => {
+    const hasMessage = messageInput.value.trim().length > 0;
+    sendBtn.disabled = !(hasMessage || attachedFile);
+  };
+
+  /** Clear current attachment UI + state. */
+  const clearAttachment = () => {
+    attachedFile = null;
+    fileB64 = null;
+    fileInput.value = '';
+    filePreview.classList.add('hidden');
+    filePreview.classList.remove('flex');
+    updateSendState();
+  };
+
+  /** Read a File object and return base-64. */
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = (e) => {
+        const uint8  = new Uint8Array(e.target.result);
+        const binary = String.fromCharCode(...uint8);
+        resolve(btoa(binary));
+      };
+      reader.onerror = reject;
+      reader.readAsArrayBuffer(file);
+    });
+
+  /* ---------- Event bindings ---------- */
+  // text input
+  messageInput.addEventListener('input', updateSendState);
+
+  // attach button
+  attachBtn.addEventListener('click', () => fileInput.click());
+
+  // file chosen
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    attachedFile = file;
+    fileNameText.textContent = file.name;
+    filePreview.classList.remove('hidden');
+    filePreview.classList.add('flex');
+    fileB64 = await fileToBase64(file);
+    updateSendState();
+  });
+
+  // remove file click
+  removeFileBtn.addEventListener('click', clearAttachment);
+
+  /* ---------- Form submit ---------- */
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = messageInput.value.trim();
+    if (!message && !attachedFile) return;
+
+    // user bubble
+    addBubble(message || `<i>File: ${attachedFile.name}</i>`, true);
+
+    // reset message box
+    messageInput.value = '';
+    updateSendState();
+
+    try {
+      /* 1️⃣ primary chat request */
+      await runWithSpinner(
+        window.pywebview.api.chat(
+          message,
+          fileB64,
+          attachedFile ? attachedFile.name : null
+        )
+      );
+
+      await runWithSpinner(window.pywebview.api.execute_last_request());
+    } finally {
+      clearAttachment(); // always reset attachment
+    }
+  });
+})();
+</script>
 </body>
 </html>

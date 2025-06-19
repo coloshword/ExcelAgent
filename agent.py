@@ -1,12 +1,16 @@
 ## agent.py: the high level excel agent 
 from openai import OpenAI
 import json
+import code_executor
+import utils
 
 class ExcelAgent:
     client = OpenAI(base_url="http://localhost:8080/v1", api_key="lm")
     # filenames: df body 
     dataframes = {
     }
+    
+    code_queue = [];
     
     def __init__(self):
         # get the instructions 
@@ -20,10 +24,46 @@ class ExcelAgent:
         # create the task 
         for filename, df in self.dataframes.items():
             input_df = df
-        # now that we have input df, let's print the string of the head
+            output_filename = filename
 
-        print(input_df.head().to_string())
-        print(self.agent_instructions)
+        input_df_view = input_df.head().to_string()
+        instruction_format = self.agent_instructions["basic_instruction1"]
+
+        instructions = instruction_format.format(input_df_view=input_df_view, task=user_request)
+        return instructions 
+
+    def send_task_LLM(self, task):
+        '''
+        send_task_LLM: sends the task to the LLM 
+        '''
+        rst = self.client.chat.completions.create(
+                model="local",
+                messages=[{"role": "user", "content": task}],
+                stream=False,
+        )
+        return rst.choices[0].message.content
+
+    def add_code_to_queue(self, code_str):
+        '''
+        adds code to the queue to execute 
+        '''
+        self.code_queue.append(code_str)
+    
+    def execute_one_from_queue(self):
+        '''
+        executes one code snippet from the queue 
+        '''
+        snippet = self.code_queue[0] 
+        self.code_queue.pop(0)
+        input_filename = list(self.dataframes.keys())[0]
+        input_df = self.dataframes[input_filename]
+        output_df = code_executor.execute(snippet, input_df)
+        b64_str = utils.buffer_to_b64(utils.df_to_excel_bytes(output_df))
+        # with_output_df, we now need to turn it into b64
+        return {
+                "filename": input_filename,
+                "content": b64_str
+        }
 
     def add_dataframe(self, filename, df):
         '''
