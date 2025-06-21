@@ -58,6 +58,11 @@ class ExcelAgent:
         input_filename = list(self.dataframes.keys())[0]
         input_df = self.dataframes[input_filename]
         output_df = code_executor.execute(snippet, input_df)
+        # start a task
+            #print("creating task")
+            #instructions = self.agent.create_task(user_msg)
+            #output_code = self.agent.send_task_LLM(instructions)
+            #self.agent.add_code_to_queue(output_code)
         b64_str = utils.buffer_to_b64(utils.df_to_excel_bytes(output_df))
         # with_output_df, we now need to turn it into b64
         return {
@@ -77,8 +82,17 @@ class ExcelAgent:
         helper function to check if is task ready. Checks if there are dataframes ready for example 
         '''
         return len(self.dataframes) > 0
-        
 
-
-
-
+    def translate_user_query(self, user_query):
+        '''
+        given the user_query, it translates it to a prompt that the coding LLM can understand.  
+        '''
+        # get the view of input_df 
+        for filename, df in self.dataframes.items():
+            input_df = df
+            output_filename = filename
+        input_df_view = input_df.head().to_string()
+        instruction_format = self.agent_instructions["translate_user_query_prompt"]
+        instructions = instruction_format.format(view=input_df_view, query=user_query)
+        # with instruction, send it to the llm
+        return self.send_task_LLM(instructions)

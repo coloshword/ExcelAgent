@@ -194,8 +194,9 @@
     updateSendState();
 
     try {
+        /* test request for the purpose of seeing the agent instructions */
       /* 1️⃣ primary chat request */
-      await runWithSpinner(
+     await runWithSpinner(
         window.pywebview.api.chat(
           message,
           fileB64,
@@ -203,7 +204,7 @@
         )
       );
 
-      await runWithSpinner(window.pywebview.api.execute_last_request());
+      await runWithSpinner(window.pywebview.api.execute_last_request()); // comment out for testing 
     } finally {
       clearAttachment(); // always reset attachment
     }
