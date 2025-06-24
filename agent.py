@@ -48,6 +48,7 @@ class ExcelAgent:
         adds code to the queue to execute 
         '''
         self.code_queue.append(code_str)
+        print("code queue appended")
     
     def execute_one_from_queue(self):
         '''

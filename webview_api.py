@@ -17,13 +17,20 @@ class WebviewAPI:
         if input_file_b64:
             b64 = base64.b64decode(input_file_b64)
             buffer = BytesIO(b64)
-            df = pd.read_excel(buffer)
+            if input_filename.endswith(".xlsx"):
+                df = pd.read_excel(buffer)
+            elif input_filename.endswith(".csv"):
+                df = pd.read_csv(buffer)
+            else:
+                raise ValueError("Filename could not be found in chat endpoint")
             self.agent.add_dataframe(input_filename, df)
         # start a task
         if self.agent.is_task_ready():
             translated_user_prompt = self.agent.translate_user_query(user_msg)
             instructions = self.agent.create_task(translated_user_prompt)
             output_code = self.agent.send_task_LLM(instructions)
+            print("Output code being created")
+            print(output_code)
             self.agent.add_code_to_queue(output_code)
             return output_code
         else:
