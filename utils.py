@@ -15,4 +15,3 @@ def buffer_to_b64(buffer):
     b64_str = base64.b64encode(buffer.read()).decode('utf-8')
     return b64_str 
 
-

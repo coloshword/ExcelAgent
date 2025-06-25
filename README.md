@@ -44,3 +44,31 @@ GOAL:
 06/21/25;
 --
 V2: Make it "translate queries", from user instructions to something the LLM can understand 
+
+
+06/24/25:
+--
+--> V3 implementation: reAct style agent 
+
+- first we need to define tools. Passing in an excel / csv sheet, we need to provide a way to see them
+- we'll maintain an object style model for the inputs 
+- so for state we probably want an agent_state class with a serries of stuff being kept A
+
+- so for simplicity we will simply use a single file with multiple tabs. So we will start with input_file
+- purely for siplest state, we want just one layer, and not add an unecessary layer with the original filename 
+- so probably a dictionary, with:
+- we will simply call it "file_obj" because its the object representing the file 
+{
+    tab_name: tab_df,
+    tab_name: tab_df
+}
+
+
+06/25/25:
+--
+- we now have an AgentState, 
+- we should define tools
+- first, all tools will take in agent_state, that just makes sense 
+- with the initial task, we will pass in the name of the sheets
+- we have view sheets, now we just need to define some prompt that will tell it you can use 
+

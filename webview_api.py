@@ -11,45 +11,10 @@ class WebviewAPI:
     agent = ExcelAgent()
 
     def chat(self, user_msg: str, input_file_b64=None, input_filename ='') -> str:
-        """Return assistant reply as plain text.
-        Two level activity, we will return the code being run, and then have it trigger 
-        """
+        # if there is an input_file, then we define 
         if input_file_b64:
-            b64 = base64.b64decode(input_file_b64)
-            buffer = BytesIO(b64)
-            if input_filename.endswith(".xlsx"):
-                df = pd.read_excel(buffer)
-            elif input_filename.endswith(".csv"):
-                df = pd.read_csv(buffer)
-            else:
-                raise ValueError("Filename could not be found in chat endpoint")
-            self.agent.add_dataframe(input_filename, df)
-        # start a task
-        if self.agent.is_task_ready():
-            translated_user_prompt = self.agent.translate_user_query(user_msg)
-            instructions = self.agent.create_task(translated_user_prompt)
-            output_code = self.agent.send_task_LLM(instructions)
-            print("Output code being created")
-            print(output_code)
-            self.agent.add_code_to_queue(output_code)
-            return output_code
-        else:
-            print("not creating task")
-
-    def execute_last_request(self):
-        '''
-        when called, executes the last request 
-        '''
-        return self.agent.execute_one_from_queue()
-
-    def translate_user_request(self, user_msg: str, input_file_b64=None, input_filename=''):
-        if input_file_b64:
-            b64 = base64.b64decode(input_file_b64)
-            buffer = BytesIO(b64)
-            df = pd.read_excel(buffer)
-            self.agent.add_dataframe(input_filename, df)
-
-        output_code = self.agent.translate_user_query(user_msg)
-        return output_code
-
-
+            buffer = BytesIO(base64.b64decode(input_file_b64))
+            self.agent.add_file_to_state(buffer, input_filename)
+        
+        if self.agent.agent_state.is_task_defined():
+            self.agent.run_task(user_msg)
