@@ -1,6 +1,7 @@
 ## agent_state: module defining the state of the agent
 import pandas as pd 
 from io import StringIO
+import json
 
 def get_file_obj(buffer, filename):
     '''
@@ -21,6 +22,23 @@ def get_file_obj(buffer, filename):
 class AgentState:
         
     input_file = None 
+    def __init__(self):
+        with open('agent_instructions.json') as f:
+            self.agent_instructions = json.load(f)
+            self.messages=[
+                    {"role": "system", "content": self.agent_instructions["react_base_prompt"]}, 
+            ]
+            self.chat_len = len(self.agent_instructions["react_base_prompt"])
+    
+    def add_message(self, role, message):
+        self.chat_len += len(message)
+        self.messages.append(
+                {"role": role, "content": message}
+        )
+
+    def get_messages(self):
+        return self.messages
+
     def add_file(self, buffer, filename):
         self.input_file = get_file_obj(buffer, filename)
 

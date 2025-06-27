@@ -72,3 +72,8 @@ V2: Make it "translate queries", from user instructions to something the LLM can
 - with the initial task, we will pass in the name of the sheets
 - we have view sheets, now we just need to define some prompt that will tell it you can use 
 
+06/26/25:
+--
+- now we have the sys prompt, let's get it to make a tool call
+- the get_context function will provide the context (what sheets there are etc)... 
+- ok now we have a json format 

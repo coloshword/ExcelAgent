@@ -17,4 +17,4 @@ class WebviewAPI:
             self.agent.add_file_to_state(buffer, input_filename)
         
         if self.agent.agent_state.is_task_defined():
-            self.agent.run_task(user_msg)
+            return self.agent.run_task(user_msg)
