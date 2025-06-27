@@ -2,6 +2,17 @@
 import pandas as pd
 import re
 import difflib
+import code_executor
+
+def _closest_sheet(sheets, name, cutoff=0.6):
+    if name in sheets:
+        return name
+    best = max(
+        sheets,
+        key=lambda s: difflib.SequenceMatcher(None, s.lower(), name.lower()).ratio(),
+    )
+    score = difflib.SequenceMatcher(None, best.lower(), name.lower()).ratio()
+    return best if score >= cutoff else None
 
 class AgentTools:
 
@@ -34,6 +45,36 @@ class AgentTools:
 
         # 3. Nothing close enough
         return "Your sheet name doesn't exist in the file; try a different name."
+
+    def run_code(self, agent_state, sheet_name, code):
+        """
+        Execute arbitrary pandas code on a worksheet.
+
+        Parameters
+        ----------
+        sheet_name : str
+            Name (or fuzzy name) of the worksheet to load as `input_df`.
+        code : str
+            Python code that **must** create a variable `output_df`.
+        """
+        # 1. Locate sheet (fuzzy match allowed)
+        sheet = _closest_sheet(agent_state.input_file.keys(), sheet_name)
+        if sheet is None:
+            return (
+                "No sheet matched that name (≥60 % similarity needed). "
+                "Try again with a different sheet_name."
+            )
+
+        # 2. Run the user code
+        try:
+            output_df = code_executor.execute(code, agent_state.input_file[sheet])
+        except Exception as err:
+            return f"RuntimeError: {type(err).__name__}: {err}"
+
+        # 3. Persist the result and show a short preview
+        agent_state.input_file[sheet] = output_df
+        preview = pd.concat([output_df.head(5), output_df.tail(5)]).to_string()
+        return f"Success. Updated sheet '{sheet}'. Preview:\n{preview}"
 
     def interpret_LM_tool_call(self, lm_output):
         '''

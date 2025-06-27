@@ -1,12 +1,12 @@
 import subprocess, atexit, json, pathlib
-import webview                         # pip install pywebview
-from openai import OpenAI              # pip install openai==1.*
+import webview                         
+from openai import OpenAI              
 import time
 import webview_api
 
 
-# 20 mins left 
 MODEL = pathlib.Path("qwen_coder/qwen2.5-coder-7b-instruct-q4_k_m.gguf")
+#MODEL = pathlib.Path("phi_models/Phi-4-mini-instruct-Q4_K_M.gguf")
 
 LLAMA_CMD = [
     "./llama-server",
