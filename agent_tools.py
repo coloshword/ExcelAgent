@@ -1,19 +1,39 @@
 ### agent_tools: module defining tools the agent can use 
 import pandas as pd
 import re
+import difflib
 
 class AgentTools:
 
-    def view_sheet(self, agent_state, sheet_name):
-        '''
-        allows you to see only the head and tail of the df 
-        '''
-        try:
+
+    def view_sheet(self, agent_state, sheet_name, cutoff=0.6):
+        """
+        Return head/tail of the closest-matching sheet.
+        Falls back to fuzzy match if exact name not found.
+        """
+        sheets = agent_state.input_file.keys()      
+
+        # 1. Exact match
+        if sheet_name in sheets:
             df = agent_state.input_file[sheet_name]
-            head_tail_df = pd.concat([df.head(10), df.tail(10)])
-            return head_tail_df.to_string()
-        except KeyError:
-            return "Your sheet name doesn't exist in the file, please try the tool again with a different sheet name"
+            return pd.concat([df.head(10), df.tail(10)]).to_string()
+
+        # 2. Fuzzy match (difflib ratio 0-1)
+        best = max(
+            sheets,
+            key=lambda s: difflib.SequenceMatcher(None, s.lower(), sheet_name.lower()).ratio(),
+        )
+        score = difflib.SequenceMatcher(None, best.lower(), sheet_name.lower()).ratio()
+
+        if score >= cutoff:             # e.g. 0.6 ≈ 60 %
+            df = agent_state.input_file[best]
+            return (
+                f"(Interpreted sheet_name='{best}' - similarity {score:.2f})\n"
+                + pd.concat([df.head(10), df.tail(10)]).to_string()
+            )
+
+        # 3. Nothing close enough
+        return "Your sheet name doesn't exist in the file; try a different name."
 
     def interpret_LM_tool_call(self, lm_output):
         '''

@@ -44,17 +44,14 @@ class ExcelAgent:
         task_msg = self.get_context(sheet_names, user_msg)
         self.agent_state.add_message("user", task_msg)
 
-        str_output = self.send_task_LLM(self.agent_state.get_messages())
-        # print output and see if it is valid json 
-        # add output back to the state as "assistant"
-        self.agent_state.add_message("assistant", str_output)
-        # now we must run the code through an interpreter
-        tool, params = self.agent_tools.parse_action(str_output)
-        
-        tool_output = getattr(self.agent_tools, tool)(self.agent_state, **params)
-        # add 
-        self.agent_state.add_message("tool", tool_output)
-        str_output2 = self.send_task_LLM(self.agent_state.get_messages())
-        print(str_output2)
-        print(self.agent_state.messages)
+        while True:
+            reply = self.send_task_LLM(self.agent_state.get_messages())
+            if "Final Answer:" in reply:
+                return reply[len("Final Answer: "):]
+            # else there is another tool call
+            tool, params = self.agent_tools.parse_action(reply)
+            result = getattr(self.agent_tools, tool)(self.agent_state, **params)
+            self.agent_state.add_message("assistant", reply)
+            self.agent_state.add_message("system", f"Observation: {result}")
+            print(self.agent_state.get_messages())
 
