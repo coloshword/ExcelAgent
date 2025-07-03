@@ -24,26 +24,23 @@ class AgentTools:
         """
         sheets = agent_state.input_file.keys()      
 
-        # 1. Exact match
         if sheet_name in sheets:
             df = agent_state.input_file[sheet_name]
-            return pd.concat([df.head(10), df.tail(10)]).to_string()
+            return pd.concat([df.head(5), df.tail(5)]).to_string()
 
-        # 2. Fuzzy match (difflib ratio 0-1)
         best = max(
             sheets,
             key=lambda s: difflib.SequenceMatcher(None, s.lower(), sheet_name.lower()).ratio(),
         )
         score = difflib.SequenceMatcher(None, best.lower(), sheet_name.lower()).ratio()
 
-        if score >= cutoff:             # e.g. 0.6 ≈ 60 %
+        if score >= cutoff:         
             df = agent_state.input_file[best]
             return (
                 f"(Interpreted sheet_name='{best}' - similarity {score:.2f})\n"
                 + pd.concat([df.head(10), df.tail(10)]).to_string()
             )
 
-        # 3. Nothing close enough
         return "Your sheet name doesn't exist in the file; try a different name."
 
     def run_code(self, agent_state, sheet_name, code):
@@ -57,7 +54,6 @@ class AgentTools:
         code : str
             Python code that **must** create a variable `output_df`.
         """
-        # 1. Locate sheet (fuzzy match allowed)
         sheet = _closest_sheet(agent_state.input_file.keys(), sheet_name)
         if sheet is None:
             return (
@@ -65,13 +61,12 @@ class AgentTools:
                 "Try again with a different sheet_name."
             )
 
-        # 2. Run the user code
         try:
             output_df = code_executor.execute(code, agent_state.input_file[sheet])
+            print(output_df)
         except Exception as err:
             return f"RuntimeError: {type(err).__name__}: {err}"
-
-        # 3. Persist the result and show a short preview
+        
         agent_state.input_file[sheet] = output_df
         preview = pd.concat([output_df.head(5), output_df.tail(5)]).to_string()
         return f"Success. Updated sheet '{sheet}'. Preview:\n{preview}"

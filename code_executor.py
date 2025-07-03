@@ -4,11 +4,21 @@ def execute(code_str, input_df):
     high level wrapper for exec() that runs code_str cleaning it from llm output, and creating a dict of input_df 
     '''
     # do a str.replace pf ``` with ### 
-    code_str = code_str.replace('```', '#')
+    # ── clean wrapper markup ─────────────────────────────────────
+    if code_str.lstrip().startswith("```"):
+        code_str = "\n".join(code_str.splitlines()[1:-1])  
+
+    if code_str.lstrip().startswith(('"""', "'''")):
+        code_str = code_str.strip()[3:-3]
+    print(code_str)
     # we need to pass in a dict with input_dfs
     variables = {
             'input_df': input_df,
     }
-    exec(code_str, globals(), variables)
+    try:
+        exec(code_str, globals(), variables)
+    except Exception as e:
+        print(e)
+    print("no issue running code")
+    print(variables)
     return variables['output_df']
-

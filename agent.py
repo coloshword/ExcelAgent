@@ -10,6 +10,7 @@ class ExcelAgent:
     client = OpenAI(base_url="http://localhost:8080/v1", api_key="lm")
     agent_state = AgentState()
     agent_tools = AgentTools()
+    prev_called_tools = []
     
 
     def add_file_to_state(self, buffer, input_filename):
@@ -47,11 +48,18 @@ class ExcelAgent:
         while True:
             reply = self.send_task_LLM(self.agent_state.get_messages())
             if "Final Answer:" in reply:
-                return reply[len("Final Answer: "):]
+                final_answer_txt = reply[len("Final Answer: "):]
+                if 'run_code' in self.prev_called_tools:
+                    return {
+                            filename = "output.xlsx",
+                            content = 
+                    }
+                else:
+                    return final_answer_txt
             # else there is another tool call
             tool, params = self.agent_tools.parse_action(reply)
+            self.prev_called_tools.append(tool)
             result = getattr(self.agent_tools, tool)(self.agent_state, **params)
             self.agent_state.add_message("assistant", reply)
             self.agent_state.add_message("system", f"Observation: {result}")
-            print(self.agent_state.get_messages())
 
