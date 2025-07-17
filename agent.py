@@ -1,10 +1,9 @@
 ## agent.py: the high level excel agent 
 from openai import OpenAI
-import code_executor
-import utils
 from agent_state import AgentState
 from agent_tools import AgentTools
-import json
+import utils
+
 
 class ExcelAgent:
     client = OpenAI(base_url="http://localhost:8080/v1", api_key="lm")
@@ -46,20 +45,25 @@ class ExcelAgent:
         self.agent_state.add_message("user", task_msg)
 
         while True:
+            print(self.agent_state.messages[-1]["content"]) 
             reply = self.send_task_LLM(self.agent_state.get_messages())
+            print(reply)
             if "Final Answer:" in reply:
                 final_answer_txt = reply[len("Final Answer: "):]
                 if 'run_code' in self.prev_called_tools:
+                    # get the final agent_state input_file
+                    final_file_content = utils.buffer_to_b64(utils.df_excel_obj_to_bytes(self.agent_state.input_file))
                     return {
-                            filename = "output.xlsx",
-                            content = 
+                            "filename": "output.xlsx",
+                            "content": final_file_content
                     }
                 else:
+                    print("this is false")
                     return final_answer_txt
             # else there is another tool call
             tool, params = self.agent_tools.parse_action(reply)
             self.prev_called_tools.append(tool)
+            print("TOOL CALLED " + tool)
             result = getattr(self.agent_tools, tool)(self.agent_state, **params)
             self.agent_state.add_message("assistant", reply)
             self.agent_state.add_message("system", f"Observation: {result}")
-

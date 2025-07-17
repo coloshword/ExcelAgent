@@ -13,7 +13,6 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; }
-    /* slim scrollbar */
     #chat-container::-webkit-scrollbar { width: 6px; }
     #chat-container::-webkit-scrollbar-track { background: #f1f1f1; }
     #chat-container::-webkit-scrollbar-thumb { background: #888; border-radius: 3px; }
@@ -107,9 +106,8 @@
       try {
         const res = await promise;
 
-        /* ----- RESPONSE HANDLING ----- */
         if (res && typeof res === 'object' && res.filename && res.content) {
-          /* turn result into a download button */
+          console.log("this response should have an content")
           spinnerBubble.innerHTML = `
             <a
               href="data:application/octet-stream;base64,${res.content}"
@@ -156,14 +154,10 @@
       });
 
 
-  /* ---------- Event bindings ---------- */
-  // text input
   messageInput.addEventListener('input', updateSendState);
 
-  // attach button
   attachBtn.addEventListener('click', () => fileInput.click());
 
-  // file chosen
   fileInput.addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -187,14 +181,11 @@
     // user bubble
     addBubble(message || `<i>File: ${attachedFile.name}</i>`, true);
 
-    // reset message box
     messageInput.value = '';
     updateSendState();
 
     try {
-        /* test request for the purpose of seeing the agent instructions */
-      /* 1️⃣ primary chat request */
-     await runWithSpinner(
+      await runWithSpinner(
         window.pywebview.api.chat(
           message,
           fileB64,
@@ -203,7 +194,7 @@
       );
 
     } finally {
-      clearAttachment(); // always reset attachment
+      clearAttachment(); 
     }
   });
 })();

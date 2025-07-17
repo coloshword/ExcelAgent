@@ -11,7 +11,8 @@ MODEL = pathlib.Path("qwen_coder/qwen2.5-coder-7b-instruct-q4_k_m.gguf")
 LLAMA_CMD = [
     "./llama-server",
     "-m", str(MODEL),
-    "--n-gpu-layers", "35"
+    "--n-gpu-layers", "35",
+    "--log-disable"
 ]
 
 llama = subprocess.Popen(LLAMA_CMD)

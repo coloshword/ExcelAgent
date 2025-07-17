@@ -2,7 +2,6 @@
 import pandas as pd
 from io import BytesIO
 import base64
-import code_executor
 import utils
 import base64
 from agent import ExcelAgent
