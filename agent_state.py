@@ -12,7 +12,6 @@ def get_file_obj(buffer, filename):
     if filename.endswith('.csv'):
         ## read just the first df, and return it 
         # buffer has to be converted to stringio
-        print("here is called")
         df = pd.read_csv(buffer)
         return {"tab_1": df}
     elif filename.endswith('.xlsx'):

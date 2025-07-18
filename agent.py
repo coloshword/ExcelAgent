@@ -6,7 +6,11 @@ import utils
 
 
 class ExcelAgent:
-    client = OpenAI(base_url="http://localhost:8080/v1", api_key="lm")
+    client = OpenAI(
+        api_key=
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
+
     agent_state = AgentState()
     agent_tools = AgentTools()
     prev_called_tools = []
@@ -22,8 +26,9 @@ class ExcelAgent:
         '''
         send_task_LLM: sends the task to the LLM 
         '''
+        print(messages)
         rst = self.client.chat.completions.create(
-                model="local",
+                model="gemini-2.5-pro",
                 messages=messages,
                 stream=False,
         )
@@ -45,9 +50,8 @@ class ExcelAgent:
         self.agent_state.add_message("user", task_msg)
 
         while True:
-            print(self.agent_state.messages[-1]["content"]) 
+            #print(self.agent_state.messages[-1]["content"]) 
             reply = self.send_task_LLM(self.agent_state.get_messages())
-            print(reply)
             if "Final Answer:" in reply:
                 final_answer_txt = reply[len("Final Answer: "):]
                 if 'run_code' in self.prev_called_tools:
@@ -63,7 +67,6 @@ class ExcelAgent:
             # else there is another tool call
             tool, params = self.agent_tools.parse_action(reply)
             self.prev_called_tools.append(tool)
-            print("TOOL CALLED " + tool)
             result = getattr(self.agent_tools, tool)(self.agent_state, **params)
             self.agent_state.add_message("assistant", reply)
             self.agent_state.add_message("system", f"Observation: {result}")
