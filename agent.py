@@ -2,18 +2,24 @@
 from openai import OpenAI
 from agent_state import AgentState
 from agent_tools import AgentTools
+from dotenv import load_dotenv
+import os 
 import utils
 
 
 class ExcelAgent:
-    client = OpenAI(
-        api_key=
-        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
-    )
 
     agent_state = AgentState()
     agent_tools = AgentTools()
     prev_called_tools = []
+
+    def __init__(self):
+        load_dotenv()
+        self.client = OpenAI(
+            api_key=os.getenv("GEMINI_API_KEY"),
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        )
+
     
 
     def add_file_to_state(self, buffer, input_filename):
