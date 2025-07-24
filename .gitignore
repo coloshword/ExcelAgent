@@ -2,8 +2,4 @@ test_sheets
 __pycache__
 venv
 .DS_Store
-llama.cpp
-phi_models
-qwen_coder
-llama-server
 .env
