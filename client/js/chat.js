@@ -20,7 +20,7 @@ function chatInputListener() {
             textNode.innerText = chatInputValue;
             chatHistory.appendChild(textNode);
             // send a chat using sendMessage
-            sendMessage(chatInputValue);
+            sendMessage(chatInputValue, null);
         }
     });
 }
@@ -55,10 +55,9 @@ async function sendMessage(message, attachment) {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({messae: message, attachment: attachment})
+        body: JSON.stringify({message: message, attachment: attachment})
     });
-    const content = await response.json();
-    console.log(content)
+    const res = await response.json();
 }
 
 setUp()
