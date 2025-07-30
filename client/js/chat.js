@@ -58,6 +58,7 @@ async function sendMessage(message, attachment) {
         body: JSON.stringify({message: message, attachment: attachment})
     });
     const res = await response.json();
+    console.log(res)
 }
 
 setUp()

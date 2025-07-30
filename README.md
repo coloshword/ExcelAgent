@@ -70,3 +70,27 @@ curl -X POST -H 'Content-Type: application/json' -d '{"message":"hello gpt god, 
                                | (CPU-Bound Python   |  (Access DB for state, save results)
                                |  Execution, `exec()`) |
                                +---------------------+
+
+### db ops
+- created first table, populated with an entry
+- start using python to query 
+- successfully queried a table from python using postgres
+
+- next thing: we need a session id
+- why? session id will be used to reference dataframes and other important information. 
+- save it in the db, so that we will not have to remember anything in the server, actual execution server is stateless 
+
+## creating basic auth
+- jwt: used for auth by generating the token upon user login, and then use it for subsequent requests 
+
+- oath2: authorizaotion framework
+- use passlib for hashing passwords 
+
+- httpBasic(), creating a protected endpoint, by giving an endpoint Depends(auth_function), where the auth function depends on httpBasic
+
+- auth fn acts as middleware (reminder: mdware being the layer that runs before your endpoint)
+- client - middleware - route - middleware - response - client 
+
+- CryptContext --> handles secure password hashing and verification 
+    - hashes the password (hash = pwd_context.hash("some password))
+    - also verifies against hashes (pwd_context.verify(<user input>, stored_hash))
