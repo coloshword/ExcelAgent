@@ -94,3 +94,43 @@ curl -X POST -H 'Content-Type: application/json' -d '{"message":"hello gpt god, 
 - CryptContext --> handles secure password hashing and verification 
     - hashes the password (hash = pwd_context.hash("some password))
     - also verifies against hashes (pwd_context.verify(<user input>, stored_hash))
+
+- OAuth2PasswordBearer: prepares JWT token authentication 
+
+NEXT: 
+add fake db and password functions 
+- now we are adding user lookup and authentication functions 
+- login flow:
+    - we run authenticate user, which provides a db, username, and password
+    - authenticate_user() calls get_user() which either returns None or 
+    a UserInDB object, which is just a Pydantic User object with an extra field hashed_password
+    - if get_user() returns None, then we return False (it doesn't exist)
+    - if user exists, get_user() creates a UserInDB object, using ** to unpack a dictionary. Make sure keys match.
+    - the UserInDB object represents the "ground-truth" object of the user's authentication -- it is pulled straight from the db with the hashed_password to create the UserInDB object
+    - returning the UserInDB model, we can now use it as any regular object, in which case we use it to veriy_password by comparing the login provided password with the user's hashed_password 
+    - we separate UserInDB and User, as UserInDB is sensitive information, representing the User with the hashed password, while User is just typical information we can display to the frontend. If we wanted to send the information to the frontend, all we have to do is cast it to a User and send.
+
+### jwt's 
+- now we add jwt 
+    - jwt contains all the user information needed so used by auth
+    - string followed by header.payload.signature
+    - header says algorithmn and token type 
+    - payload contains claims (username, exp)
+    - signature is a hash to verify no tampering 
+    
+    timeline:
+    - user logs in --> server creates a jwt and sends it to the client 
+    - client stores jwt in localStorage or cookie 
+    - for all furture requests requiring auth --> client sends JWT in the "Authorization" header 
+    - server verifies the signature and reads payload 
+
+    - our function in auth.py server side: creates a jwt token with expiration time expires_delta
+    - we use jose.jwt to encode, using secret_key and algorithmn. secret_key is some string used to encode our data, and is needed to decode the encoded jwt token 
+
+- working on some token validation functions (used to take our jwt and read it essentially)
+    - used to continuously check access 
+    - jwt.decode(token) would throw some sort of error if tampered, if the payload is decoded successfully, and you can access the payload for a username, you are good, this is a valid jwt token
+
+- work on adding the auth endpoint 
+- after login, we get a JWT.
+- accessing get_current_user() function requires a JWT token to be given access, otherwise access won't be granted 
