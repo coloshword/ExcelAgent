@@ -142,3 +142,4 @@ add fake db and password functions
 
 /docs --> just some sample ui to test endpoints interactively -- including auth.
 - after doing "Authorize", it sends the jwt to all protected routes.
+

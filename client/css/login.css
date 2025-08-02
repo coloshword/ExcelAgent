@@ -1,0 +1,14 @@
+.login-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+    align-items: center;
+    height: 100svh;
+    width: 100svw;
+}
+
+.login-input-cont {
+    display: flex;
+    flex-direction: column;
+}
