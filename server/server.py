@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import timedelta
 import auth
+from models import User
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
 class ChatMessage(BaseModel):
@@ -41,11 +42,6 @@ Endpoint for logging in and getting a
 async def root():
     return {"message": "FASTAPI Auth demo"}
 
-# this should be a protected endpoint 
-@app.get("/protected")
-async def protected_route(current_user: str = Depends(auth.authenticate_user)):
-    return {"message": f"Hello {current_user}, this is a protected route!"}
-
 # login endpoint to get a jwt token 
 @app.post("/token")
 async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -61,4 +57,18 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
         )
     
     access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = 
+    access_token = auth.create_access_token(
+        data={"sub": user.username}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
+
+# endpoint that requires jwt token 
+@app.get("/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(auth.get_current_active_user)):
+    """Get current user information."""
+    return current_user
+
+# this should be a protected endpoint 
+@app.get("/protected")
+async def protected_route(current_user: User = Depends(auth.get_current_active_user)):
+    return {"message": f"Hello {current_user.full_name}, this is a protected route!"}

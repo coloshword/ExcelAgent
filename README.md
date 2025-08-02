@@ -134,3 +134,11 @@ add fake db and password functions
 - work on adding the auth endpoint 
 - after login, we get a JWT.
 - accessing get_current_user() function requires a JWT token to be given access, otherwise access won't be granted 
+
+### token 
+/token endpoint accepts username and password, returning a jwt token.
+
+/users/me endpoint get's the user's information using the token 
+
+/docs --> just some sample ui to test endpoints interactively -- including auth.
+- after doing "Authorize", it sends the jwt to all protected routes.
