@@ -143,3 +143,33 @@ add fake db and password functions
 /docs --> just some sample ui to test endpoints interactively -- including auth.
 - after doing "Authorize", it sends the jwt to all protected routes.
 
+## login page 
+- set up basic login page
+- next thing, make the login page request a jwt token
+- what's the endpoint for this? 
+- endpoint is login_for_access_token
+    - need to findout, what the heck is form_data 
+    - payload seems to be: 
+    {
+        "username":
+        "password":
+    }
+    - so we make a request using this?
+    - use fetch api again
+
+    body is gonna be: 
+    {
+        "username":
+        "password":
+    }
+    - you gotta use FormData() and not json.
+
+- 422 code "Unprocessable Entity" means server understood your request, but could not process it due to semantic error 
+- in my case, I did FormData as the payload, but I gave it a "Content-Type": "application/x-www-form-urlencoded" in the header, which explicitly set the body to www-form-urlencoded format. So the server is confused, since the body is "multipart/form-data" format, but I said its urlencoded format -- hence the error. By not setting the Content-type to anything explicit, the browser handled it on its own, and set it automatically so it worked.
+
+- now that I generate the jwt token properly, we need to figure out how to store it in the client, and also how to use it for further auth. 
+
+### adding jwt to client 
+- after receiving the jwt from the server, we want to store it in the client (browser). And the client then uses this jwt token in the authorization header when making requests to the server that require auth 
+- well just use cookies since it seems to be the easiest -- less vulnerable to xss attacks 
+- remember to use httponly flag 

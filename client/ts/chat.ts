@@ -1,7 +1,6 @@
 // Caching common elements with type annotations
 const chatHistory = document.querySelector(".chat-history") as HTMLElement;
 
-// Define an interface for our endpoints to ensure type safety
 interface Endpoints {
   chatEndpoint: string;
 }
@@ -53,7 +52,7 @@ async function sendMessage(message: string, attachment: string | null = null): P
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      throw new Error(`HTTP error, status: ${response.status}`);
     }
 
     const res = await response.json();

@@ -1,3 +1,7 @@
+/** login.css: stylings for the login page */
+* {
+    margin: 0;
+}
 .login-content {
     display: flex;
     flex-direction: column;
