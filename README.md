@@ -173,3 +173,16 @@ add fake db and password functions
 - after receiving the jwt from the server, we want to store it in the client (browser). And the client then uses this jwt token in the authorization header when making requests to the server that require auth 
 - well just use cookies since it seems to be the easiest -- less vulnerable to xss attacks 
 - remember to use httponly flag 
+- so can't be done on the client using javascript, because xss attack, a script can get the cookie and impersonate
+- store cookie in a HTTPOnly cookie 
+    - prevents client side js (even with XSS attack) steals the JWT token 
+    - also does automatic handling. Once token is in an HttpOnly cookie, browser auto attaches it to every subsequent request to the same domain. Simplifies client side code 
+
+- instead of a client-side fetch request returning the JWT in the response body, server set the HttpOnly cookie directly in the response header. The server's response to the login request would contain a Set-Cookie header. The browser recieves this header, and auto stores the cookie, bypassing the need for client code to explicit this. 
+    - in short: client side code doesn't even reference the cookie 
+    - server tells the browser to "remember" this jwt token for all future requests to the domain (by doing a Set-Cookie header)
+
+- trick: use dependency injection in fastapi. When you need to use a certain object like the FastAPI.Response() class, just add it to the parameter list, and refer to it in the code. You don't need to provide it when calling the function, FastAPI creates one for you.
+    - inject the Response object, to manipulate the headers like (Set-Cookie header), but still return the original dictionary to provide the response body to be serialized to json
+
+- 
