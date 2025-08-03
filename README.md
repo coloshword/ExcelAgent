@@ -185,4 +185,4 @@ add fake db and password functions
 - trick: use dependency injection in fastapi. When you need to use a certain object like the FastAPI.Response() class, just add it to the parameter list, and refer to it in the code. You don't need to provide it when calling the function, FastAPI creates one for you.
     - inject the Response object, to manipulate the headers like (Set-Cookie header), but still return the original dictionary to provide the response body to be serialized to json
 
-- 
+- created a restricted page: now we will load the resource seeing if it has access to it.

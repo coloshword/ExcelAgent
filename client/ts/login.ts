@@ -14,7 +14,14 @@ async function login() {
     userNameField.value = '';
     pswdField.value = '';
     const jwt = await authenticateUser(typedUsername, typedPswd);
-    console.log(jwt);
+    // after authentication add a button to access differnt page 
+    const restrictedAccessBtn = document.createElement('button') as HTMLButtonElement;
+    restrictedAccessBtn.innerText = 'Access restricted page';
+    restrictedAccessBtn.addEventListener('click', () => {
+        window.location.href = "restrictedPage.html";
+    })
+    const loginContentCont = document.querySelector('.login-content') as HTMLDivElement;
+    loginContentCont.appendChild(restrictedAccessBtn);
 }
 
 /**
