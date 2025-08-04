@@ -1,6 +1,6 @@
 ## auth.py
 import secrets 
-from fastapi import Depends, FastAPI, HTTPException, status 
+from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials 
 from passlib.context import CryptContext 
 from fastapi.security import OAuth2PasswordBearer
@@ -15,6 +15,12 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+token_exception = HTTPException (
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials, because of missing token cookie",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 fake_users_db = {
     "aceroliang": {
@@ -74,7 +80,13 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(token: str = Depends(oath2_scheme)):
+def get_token_from_cookie(request: Request):
+    try: 
+        return request.cookies.get("access_token")
+    except KeyError:
+        raise token_exception
+
+async def get_current_user(token: str = Depends(get_token_from_cookie)):
     """
     Get the current user from the JWT token.
     PROTECTED! by the JWT token! won't be given access until JWT token is given 

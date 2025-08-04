@@ -10,6 +10,7 @@ async function setUp() {
         const response = await fetch(endpointBase + "/protected", {
             method: "GET",
             mode: "cors",
+            credentials: "include",
         });
     
         if (!response.ok) {
@@ -17,7 +18,7 @@ async function setUp() {
             throw new Error("http error");
         }
         const res = await response.json();
-        console.log(res);
+        displayText = res.message;
     } catch (error) {
         displayText = "You are unauthorized";
     }

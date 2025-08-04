@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Response
+from fastapi import FastAPI, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
@@ -12,7 +12,7 @@ class ChatMessage(BaseModel):
     attachment: str | None
 
 origins = [
-    "*"
+    "http://127.0.0.1:5500"
 ]    
 
 app = FastAPI()
@@ -44,11 +44,12 @@ async def root():
 
 # login endpoint to get a jwt token 
 @app.post("/token")
-async def login_for_access_token(response: Response, form_data: OAuth2PasswordRequestForm = Depends()): 
+async def login_for_access_token(response: Response, request: Request, form_data: OAuth2PasswordRequestForm = Depends()): 
     """
     Authenticate user and return access token.
     """ 
     user = auth.authenticate_user(auth.fake_users_db, form_data.username, form_data.password)
+    print(request.cookies)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -60,7 +61,8 @@ async def login_for_access_token(response: Response, form_data: OAuth2PasswordRe
     access_token = auth.create_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
-    response.set_cookie(key="access_token", value=access_token, httponly=True)
+
+    response.set_cookie(key="access_token", value=access_token, httponly=True, samesite="lax", secure=False, path="/")
     return {"access_token": access_token, "token_type": "bearer"}
 
 # endpoint that requires jwt token 

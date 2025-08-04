@@ -186,3 +186,14 @@ add fake db and password functions
     - inject the Response object, to manipulate the headers like (Set-Cookie header), but still return the original dictionary to provide the response body to be serialized to json
 
 - created a restricted page: now we will load the resource seeing if it has access to it.
+
+- working on: a sample page that will show restricted content only to authenticated users.
+    - why is the restricted client page not able to access the protected content despite jwt token being added to the browser using the Set-Cookie header? 
+        - because cors, since our client and server are different ports, it's a cross origin request, and fetch-api by design does not send credentials (like cookies and auth headers) with cross origin requests
+            - key? include:
+                credentials: 'include' in the fetch call
+        - well that did not fix the issue... let's make sure that set-cookie is indeed setting the cookie 
+
+        - the source of the bug: not setting a location for the Set-Cookie header. I used Set-Cookie, but didn't provide a location, so the browser by default associated my jwt cookie with the origin of the page that made the request, (client code running on 5500). however, server is on port 8000. Hence when I told it to include the authorization , the browser just didn't send the jwt token in the authorization header since it saw that we are making a request to port 8000, but the jwt cookie is supposed to be used only to localhost:5500. Server then receives the get request with no authorization header hence ==> not authorized. 
+        - so the idea: use dependency injection to see the HOST of the request, aka (the server the http request is being sent to). This way, I dynamically know what the ip and port is the server is running on (as it can change if its hard coded). 
+            - use the set_cookie, with domain to get the actual domain. 

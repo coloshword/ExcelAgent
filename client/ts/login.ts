@@ -41,6 +41,7 @@ async function authenticateUser(typedUsername: string, typedPswd: string): Promi
             method: "POST",
             mode: "cors",
             body: formData,
+            credentials: "include",
         });
 
         if (!response.ok) {
