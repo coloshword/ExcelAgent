@@ -25,8 +25,6 @@ token_exception = HTTPException (
 fake_users_db = {
     "aceroliang": {
         "username": "aceroliang",
-        "full_name": "Acero Liang",
-        "email": "acero.liangli@gmail.com",
         "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
         "disabled": False,
     }
