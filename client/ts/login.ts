@@ -3,6 +3,7 @@
 const loginBtn = document.querySelector(".login-btn") as HTMLButtonElement;
 const userNameField = document.querySelector("#login-username-input") as HTMLInputElement;
 const pswdField = document.querySelector("#login-pswd-input") as HTMLInputElement;
+const createUserBtn = document.querySelector(".redirect-create-user-page-btn") as HTMLButtonElement;
 const endpointBase: string = "http://127.0.0.1:8000";
 
 /**
@@ -28,7 +29,7 @@ async function login() {
  * Authenticates the user by requesting a jwt token from the server 
  * @param typedUsername: the username that was typed in
  * @param typedPswd: the password that was typed in 
- * @returns 
+ * @returns the jwt token if auth is successful, otherwise an HTTP error is thrown
  */
 async function authenticateUser(typedUsername: string, typedPswd: string): Promise<string> {
     try {
@@ -56,12 +57,19 @@ async function authenticateUser(typedUsername: string, typedPswd: string): Promi
     }
 }
 
+/**
+ * function to redirect to the create user page. To be called as an event listener
+ */
+function redirectCreateUserPage() {
+    window.location.href = "/client/createUser.html"
+}
 
 /**
  * Sets up the event listeners
  */
 function setUpEventListeners() {
-    loginBtn.addEventListener('click', login)
+    loginBtn.addEventListener('click', login);
+    createUserBtn.addEventListener('click', redirectCreateUserPage);
 }
 
 /**

@@ -1,13 +1,14 @@
-/** login.css: stylings for the login page */
 * {
     margin: 0;
 }
+
 .login-content {
     display: flex;
     flex-direction: column;
     justify-content: center;
     gap: 0.5rem;
     align-items: center;
+    text-align: left;
     height: 100svh;
     width: 100svw;
 }
@@ -15,4 +16,12 @@
 .login-input-cont {
     display: flex;
     flex-direction: column;
+}
+
+.page-description {
+    text-align: left;
+}
+
+.page-description-cont {
+    display: flex;
 }

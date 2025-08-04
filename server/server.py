@@ -75,3 +75,7 @@ async def read_users_me(current_user: User = Depends(auth.get_current_active_use
 @app.get("/protected")
 async def protected_route(current_user: User = Depends(auth.get_current_active_user)):
     return {"message": f"Hello {current_user.full_name}, this is a protected route!"}
+
+@app.post("/create_user")
+async def create_user():
+    pass

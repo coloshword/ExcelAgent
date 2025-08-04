@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/loginCreateUserPage.css">
 </head>
 <body>
     <div class="login-content">
+        <span><b>Login</b></span>
         <div class="login-input-cont" >
             <span>Username:</span>
             <input type="text" id="login-username-input"></input>
@@ -16,7 +17,10 @@
             <span>Password:</span>
             <input type="text" id="login-pswd-input"></input>
         </div>
-        <button class="login-btn">Login</button> 
+        <div class="btn-container">
+            <button class="login-btn">Login</button> 
+            <button class="redirect-create-user-page-btn"> Create User</button>
+        </div>
     </div>
     <script type="module" src="dist/login.js"></script>
 </body>
