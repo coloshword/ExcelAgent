@@ -6,3 +6,4 @@ venv
 db
 client/dist/
 **/*.d.ts
+google_auth.json

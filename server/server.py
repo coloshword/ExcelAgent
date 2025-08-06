@@ -49,7 +49,6 @@ async def login_for_access_token(response: Response, request: Request, form_data
     Authenticate user and return access token.
     """ 
     user = auth.authenticate_user(auth.fake_users_db, form_data.username, form_data.password)
-    print(request.cookies)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
