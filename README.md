@@ -180,3 +180,6 @@ add fake db and password functions
 Obtaining OAuth 2.0 access tokens:
     - frontend (js) : builds the google login url, and redirects user to Google
     (Google): Authenticates the user, and redirects the browser to our python backend (Authorized redirect URIs)
+
+    - create authorization request, request sets 
+    - frontend should call the endpoint to create a google request, that way we only keep the auth code on the backend 
