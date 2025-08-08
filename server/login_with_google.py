@@ -18,7 +18,7 @@ def get_authorization_url() -> tuple[str, str]:
             'openid'
         ]
     )
-    flow.redirect_uri = 'https://www.wikipedia.org/'
+    flow.redirect_uri = 'http://127.0.0.1:5500/client/restrictedPage.html'
     # generate a URL
     return flow.authorization_url(
         access_type = 'offline',
