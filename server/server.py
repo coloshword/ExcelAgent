@@ -2,9 +2,11 @@ from fastapi import FastAPI, Depends, HTTPException, status, Response, Request
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.responses import RedirectResponse
 from datetime import timedelta
 import auth
 from models import User
+import login_with_google
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
 class ChatMessage(BaseModel):
@@ -78,3 +80,12 @@ async def protected_route(current_user: User = Depends(auth.get_current_active_u
 @app.post("/create_user")
 async def create_user():
     pass
+
+# continue with google 
+@app.get("/google")
+async def continue_with_google_for_access_token():
+    """
+    Get JWT token with google authentication
+    """
+    auth_url, state = login_with_google.get_authorization_url()
+    return RedirectResponse(auth_url)
