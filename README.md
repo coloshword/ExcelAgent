@@ -182,4 +182,7 @@ Obtaining OAuth 2.0 access tokens:
     (Google): Authenticates the user, and redirects the browser to our python backend (Authorized redirect URIs)
 
     - create authorization request, request sets 
-    - frontend should call the endpoint to create a google request, that way we only keep the auth code on the backend 
+    - frontend should call the endpoint to create a google request, that way we only keep the auth code on the backend S
+
+### aug 8th. 2025
+- get the jwt token back 

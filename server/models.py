@@ -12,3 +12,11 @@ class UserInDB(User):
 class UserCreate(BaseModel):
     username: str
     password: str 
+
+# model for google auth redirect 
+class GoogleAuthRedirect(BaseModel):
+    code: str
+    client_id: str 
+    client_secret: str
+    redirect_uri: str
+    grant_type: str 

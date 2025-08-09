@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 import auth
-from models import User
+from models import User, GoogleAuthRedirect
 import login_with_google
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
@@ -89,3 +89,10 @@ async def continue_with_google_for_access_token():
     """
     auth_url, state = login_with_google.get_authorization_url()
     return RedirectResponse(auth_url)
+
+@app.get("/google/auth/redirect")
+async def google_auth_redirect(req: Request):
+    """
+    The Google auth redirect, after the user "accepts" to login to the application
+    """
+    query_params = dict(req.query_params) # we can use this to get the status by checking if the 'code' value is there, has state, code, scope, authuser, prompt

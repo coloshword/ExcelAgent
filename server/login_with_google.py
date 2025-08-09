@@ -18,7 +18,7 @@ def get_authorization_url() -> tuple[str, str]:
             'openid'
         ]
     )
-    flow.redirect_uri = 'http://127.0.0.1:5500/client/restrictedPage.html'
+    flow.redirect_uri = 'http://127.0.0.1:8000/google/auth/redirect'
     # generate a URL
     return flow.authorization_url(
         access_type = 'offline',
