@@ -2,6 +2,15 @@
 import google.oauth2.credentials 
 import google_auth_oauthlib.flow 
 
+client_secret_path = "google_auth.json"
+flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+    client_secret_path,
+    scopes=[
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'openid'
+    ]
+)
 
 def get_authorization_url() -> tuple[str, str]:
     '''
@@ -9,15 +18,6 @@ def get_authorization_url() -> tuple[str, str]:
         Returns:
             (authorization_url, state): the authorization url and state as a tuple
     '''
-    client_secret_path = "google_auth.json"
-    flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
-        client_secret_path,
-        scopes=[
-            'https://www.googleapis.com/auth/userinfo.email',
-            'https://www.googleapis.com/auth/userinfo.profile',
-            'openid'
-        ]
-    )
     flow.redirect_uri = 'http://127.0.0.1:8000/google/auth/redirect'
     # generate a URL
     return flow.authorization_url(
