@@ -6,8 +6,11 @@ from fastapi.responses import RedirectResponse
 from datetime import timedelta
 import auth
 from models import User
-
+import googleapiclient.discovery
 import login_with_google
+from login_with_google import flow
+import googleapiclient.discovery
+
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
 class ChatMessage(BaseModel):
@@ -89,7 +92,6 @@ async def continue_with_google_for_access_token():
     Get JWT token with google authentication
     """
     auth_url, state = login_with_google.get_authorization_url()
-
     return RedirectResponse(auth_url)
 
 @app.get("/google/auth/redirect")
@@ -97,3 +99,20 @@ async def google_auth_redirect(req: Request):
     """
     The Google auth redirect, after the user "accepts" to login to the application
     """
+    query_params = dict(req.query_params) # we can use this to get the status by checking if the 'code' value is there, has state, code, scope, authuser, prompt
+    
+    # Get the authorization code from the query parameters
+    code = query_params.get("code")
+    if not code:
+        raise HTTPException(status_code=400, detail="Authorization code not found")
+    
+    try:
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
+        user_info = service.userinfo().get().execute() # the user_info 
+        print(user_info)
+        return {"message": "Authentication successful"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
