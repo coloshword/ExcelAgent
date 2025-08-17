@@ -34,3 +34,9 @@
                                +---------------------+
 
 - we now have the user info 
+
+- users table is created
+- let's create the users on login
+- write some simple code to create a user... 
+- and some simple code to get a user 
+- this will take the SimpleConnection Pool to do this

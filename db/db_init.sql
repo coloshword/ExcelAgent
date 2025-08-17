@@ -8,7 +8,6 @@
 -- TIMESTAMPTZ: type that is a time stamp with the utc time zone, when queried, we get the time for the timezone im in which is perfect
 -- DEFAULT sets the value automatically 
 -- NOW() postgres function to return the time now 
-
 -- to use this in the 
 CREATE TABLE users (
     id BIGSERIAL PRIMARY KEY,
@@ -24,4 +23,3 @@ CREATE TABLE users (
 -- \c <db_name>
 -- \dt: shows all the tables
 -- run the sql file 
-
