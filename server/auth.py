@@ -10,11 +10,13 @@ from typing import Optional
 from jose import JWTError, jwt
 from psycopg2.pool import SimpleConnectionPool
 import db_ops
-
-SECRET_KEY = "some-secret-key"
+from dotenv import load_dotenv
+import os 
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
+SECRET_KEY = os.environ.get("secret_key")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oath2_scheme = OAuth2PasswordBearer(tokenUrl="token")
@@ -110,13 +112,6 @@ async def get_current_user(token: str = Depends(get_token_from_cookie)):
         raise credentials_exception
     return user
 
-async def get_current_active_user(current_user: User = Depends(get_current_user)):
-    """
-    simply an extra check to make sure the account isn't disabled. 
-    """
-    if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
-    return current_user 
 
 async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPool):
     '''
@@ -127,8 +122,14 @@ async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnec
     '''
     # see if user is in the db
     google_sub = google_user_info['id']
-    if db_ops.is_user_in_db(pool, google_sub):
-        print("logging in")
-    else:
+    if not db_ops.is_user_in_db(pool, google_sub):
         print("creating user")
         db_ops.create_user(pool, google_user_info)
+    print("logging in")
+    # create a data dict (payload) to encode in the jwt, in our case we just need google_sub as auth
+    data_dict = {
+        "id": google_sub
+    }
+
+if __name__ == "__main__":
+    print(SECRET_KEY)
