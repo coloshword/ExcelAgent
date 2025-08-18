@@ -112,24 +112,36 @@ async def get_current_user(token: str = Depends(get_token_from_cookie)):
         raise credentials_exception
     return user
 
+def get_current_active_user():
+    return 'acero'
 
-async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPool):
+async def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:
+    '''
+    handles logging in and gets the jwt, from the google sub
+        Returns:
+            pool: the SimpleConnectionPool to pull conns from
+            jwt: the jwt 
+    '''
+    # update last login
+    conn = pool.getconn()
+    db_ops.update_last_login_time(conn, google_sub)
+    data_dict = {
+        "id": google_sub
+    }
+    jwt = create_access_token(data_dict) # default cookie with expires = 30 mins
+    return jwt 
+
+async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPool) -> str:
     '''
     handles create user or login. Either creates a new user in the db, or logs them in. Returns the jwt header  
         Params:
             google_user_info: the info pulled from google oath2
         Returns:
+            jwt: the jwt of the newly logged in user 
     '''
     # see if user is in the db
     google_sub = google_user_info['id']
     if not db_ops.is_user_in_db(pool, google_sub):
-        print("creating user")
-        db_ops.create_user(pool, google_user_info)
-    print("logging in")
-    # create a data dict (payload) to encode in the jwt, in our case we just need google_sub as auth
-    data_dict = {
-        "id": google_sub
-    }
-
-if __name__ == "__main__":
-    print(SECRET_KEY)
+        await db_ops.create_user(pool, google_user_info)
+    jwt = await login_and_get_jwt(pool, google_sub)
+    return jwt

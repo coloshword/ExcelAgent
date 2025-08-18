@@ -60,12 +60,10 @@ def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.e
             table: the table name 
             conn: a connection from the SimpleConnectionPool
     '''
-    print("this is called")
     cur = conn.cursor()
     # build the query 
     model_dict = model.model_dump()
     query = build_insert_query_from_dict(model_dict, "users")
-    print(f"query: {query}")
     # create the data (just a tuple of values)
     data = tuple(model_dict.values())
     cur.execute(query, data)
@@ -86,10 +84,19 @@ def create_user(pool: SimpleConnectionPool, google_user_info: dict):
         "created_on": datetime.now(),
         "last_login": datetime.now()
     }
-    print(user)
     # create a user object 
     #call the insert wrapper 
     insert_model_to_table(models.User(**user), 'users', conn)
+
+def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str):
+    cur = conn.cursor()
+    query = """
+        UPDATE users 
+        SET last_login = NOW()
+        where google_sub = %s
+    """
+    cur.execute(query, (google_sub,))
+    conn.commit()
 
 def is_user_in_db(pool: SimpleConnectionPool, google_sub: str) -> bool:
     '''
@@ -106,14 +113,11 @@ def is_user_in_db(pool: SimpleConnectionPool, google_sub: str) -> bool:
         SELECT * from users as u
         where u.google_sub = %s 
     '''
-    print(query)
     cur.execute(query, (google_sub,))
     rows:tuple = cur.fetchone()
     if rows:
-        print('found a match')
         return True
     else:
-        print('did not find a match')
         return False 
 
 if __name__ == "__main__":
