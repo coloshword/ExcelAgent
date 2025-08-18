@@ -104,7 +104,7 @@ async def continue_with_google_for_access_token():
     return RedirectResponse(auth_url)
 
 @app.get("/google/auth/redirect")
-async def google_auth_redirect(req: Request):
+async def google_auth_redirect(req: Request, response: Response):
     """
     The Google auth redirect, after the user "accepts" to login to the application
     Responsible for checking if auth is successful.
@@ -121,8 +121,9 @@ async def google_auth_redirect(req: Request):
         credentials = flow.credentials
         service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
         user_info = service.userinfo().get().execute() # the user_info 
-        await auth.handle_create_user_or_login(user_info, pool)
+        jwt = await auth.handle_create_user_or_login(user_info, pool)
+        print(jwt)
+        response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")
         return {"message": "Authentication successful"}
-        
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")

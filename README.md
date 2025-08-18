@@ -46,3 +46,6 @@
 - let's add create user to the server endpoint 
 
 - is_user_in_db: works 
+
+- now we need to set the jwt... how do we do that 
+we can do depedency injection  using response.set_cookie
