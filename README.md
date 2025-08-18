@@ -40,3 +40,9 @@
 - write some simple code to create a user... 
 - and some simple code to get a user 
 - this will take the SimpleConnection Pool to do this
+
+
+- create user is created, now for login user 
+- let's add create user to the server endpoint 
+
+- is_user_in_db: works 

@@ -8,8 +8,11 @@ from models import User, UserInDB
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
+from psycopg2.pool import SimpleConnectionPool
+import db_ops
 
 SECRET_KEY = "some-secret-key"
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -114,3 +117,18 @@ async def get_current_active_user(current_user: User = Depends(get_current_user)
     if current_user.disabled:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user 
+
+async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPool):
+    '''
+    handles create user or login. Either creates a new user in the db, or logs them in. Returns the jwt header  
+        Params:
+            google_user_info: the info pulled from google oath2
+        Returns:
+    '''
+    # see if user is in the db
+    google_sub = google_user_info['id']
+    if db_ops.is_user_in_db(pool, google_sub):
+        print("logging in")
+    else:
+        print("creating user")
+        db_ops.create_user(pool, google_user_info)

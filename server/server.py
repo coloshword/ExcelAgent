@@ -10,6 +10,9 @@ import googleapiclient.discovery
 import login_with_google
 from login_with_google import flow
 import googleapiclient.discovery
+from psycopg2.pool import SimpleConnectionPool
+from contextlib import asynccontextmanager
+import db_ops
 
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
@@ -21,7 +24,19 @@ origins = [
     "http://127.0.0.1:5500"
 ]    
 
-app = FastAPI()
+# create the simple connection pool for postgres 
+pool: SimpleConnectionPool | None = None 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    global pool 
+    pool = db_ops.init_pool(1, 10)
+    try:
+        yield # yielding so that the function doesn't return until app lifespan ends
+    finally:
+        pool.closeall()
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,7 +46,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 '''
 Endpoint for chatting with the LLM in the backend 
 '''
@@ -39,11 +53,6 @@ Endpoint for chatting with the LLM in the backend
 async def add_message(msg: ChatMessage):
     return {"received_message": msg.message, "received_attachment": msg.attachment}
 
-'''
-Endpoint for logging in and getting a 
-'''
-
-## following a quick auth guide 
 @app.get("/")
 async def root():
     return {"message": "FASTAPI Auth demo"}
@@ -98,6 +107,7 @@ async def continue_with_google_for_access_token():
 async def google_auth_redirect(req: Request):
     """
     The Google auth redirect, after the user "accepts" to login to the application
+    Responsible for checking if auth is successful.
     """
     query_params = dict(req.query_params) # we can use this to get the status by checking if the 'code' value is there, has state, code, scope, authuser, prompt
     
@@ -111,7 +121,7 @@ async def google_auth_redirect(req: Request):
         credentials = flow.credentials
         service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
         user_info = service.userinfo().get().execute() # the user_info 
-        print(user_info)
+        await auth.handle_create_user_or_login(user_info, pool)
         return {"message": "Authentication successful"}
         
     except Exception as e:

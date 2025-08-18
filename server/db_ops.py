@@ -1,6 +1,7 @@
 ## db_ops: actual db operations 
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
+import psycopg2.extensions
 from dotenv import load_dotenv
 import os 
 import models 
@@ -36,8 +37,6 @@ def init_pool(min_connections: int, max_connections:int) -> SimpleConnectionPool
         host=DB_config["host"],
         port=DB_config["port"]
     )
-    #conn = pool.getconn()
-    #print(conn)
     return pool
 
 def build_insert_query_from_dict(d, table):
@@ -61,34 +60,63 @@ def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.e
             table: the table name 
             conn: a connection from the SimpleConnectionPool
     '''
+    print("this is called")
     cur = conn.cursor()
     # build the query 
     model_dict = model.model_dump()
     query = build_insert_query_from_dict(model_dict, "users")
+    print(f"query: {query}")
     # create the data (just a tuple of values)
     data = tuple(model_dict.values())
     cur.execute(query, data)
     conn.commit()
 
-def create_user(pool: SimpleConnectionPool):
+def create_user(pool: SimpleConnectionPool, google_user_info: dict):
     '''
     creates a user in the database.
         Params:
             pool: the pool to get conns from 
+            google_user_info: the google_user_info dictionary 
     '''
+
     conn = pool.getconn()
     user = {
-        "id": "1",
-        "google_sub": "123213",
-        "email": "someemail",
+        "google_sub": google_user_info["id"],
+        "email": google_user_info["email"],
         "created_on": datetime.now(),
         "last_login": datetime.now()
     }
+    print(user)
     # create a user object 
     #call the insert wrapper 
     insert_model_to_table(models.User(**user), 'users', conn)
 
+def is_user_in_db(pool: SimpleConnectionPool, google_sub: str) -> bool:
+    '''
+    Checks if the user has an existing account in the db 
+        Params:
+            pool: the pool to get conns from 
+            google_sub: the google_sub of the user to check if they exist in the db
+        Returns:
+            True / False
+    '''
+    conn: psycopg2.extensions.connection = pool.getconn()
+    cur: psycopg2.extensions.cursor = conn.cursor()
+    query = '''
+        SELECT * from users as u
+        where u.google_sub = %s 
+    '''
+    print(query)
+    cur.execute(query, (google_sub,))
+    rows:tuple = cur.fetchone()
+    if rows:
+        print('found a match')
+        return True
+    else:
+        print('did not find a match')
+        return False 
+
 if __name__ == "__main__":
     pool = init_pool(1, 10)
-    conn = pool.getconn()
-    create_user(pool)
+    #create_user(pool)
+    is_user_in_db(pool, '12')
