@@ -68,3 +68,6 @@ async def read_users_me(current_user: User = Depends(auth.get_current_active_use
 - for using pool.getconn(), make sure to use pool.putconn() to restore the connection
 
 - using Depends() --> your function needs a specific value for a parameter, and you have a function that allows you to get it, you can define the parameter as Depends() on the function that gives you that value, and fastapi chains that function to be called to give you that value 
+
+- now to work on created page,
+- we should redirect after applying the cookie 

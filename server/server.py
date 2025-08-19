@@ -14,6 +14,7 @@ from psycopg2.pool import SimpleConnectionPool
 from contextlib import asynccontextmanager
 from deps import get_pool
 import db_ops
+import json
 
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
@@ -25,6 +26,8 @@ origins = [
     "http://127.0.0.1:5500"
 ]    
 
+with open("config.json") as f:
+    config = json.load(f)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -99,7 +102,7 @@ async def continue_with_google_for_access_token():
     return RedirectResponse(auth_url)
 
 @app.get("/google/auth/redirect")
-async def google_auth_redirect(req: Request, response: Response, pool:SimpleConnectionPool = Depends(get_pool)):
+async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_pool)):
     """
     The Google auth redirect, after the user "accepts" to login to the application
     Responsible for checking if auth is successful.
@@ -116,8 +119,10 @@ async def google_auth_redirect(req: Request, response: Response, pool:SimpleConn
         credentials = flow.credentials
         service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
         user_info = service.userinfo().get().execute() # the user_info 
+        redirect_url = f"{config['client_uri']}/restrictedPage.html"
+        response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
         jwt = await auth.handle_create_user_or_login(user_info, pool)
         response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")
-        return {"message": "Authentication successful"}
+        return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
