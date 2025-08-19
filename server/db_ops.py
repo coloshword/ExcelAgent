@@ -4,7 +4,7 @@ from psycopg2.pool import SimpleConnectionPool
 import psycopg2.extensions
 from dotenv import load_dotenv
 import os 
-import models 
+from models import User
 import pydantic
 from datetime import datetime
 
@@ -86,7 +86,7 @@ def create_user(pool: SimpleConnectionPool, google_user_info: dict):
     }
     # create a user object 
     #call the insert wrapper 
-    insert_model_to_table(models.User(**user), 'users', conn)
+    insert_model_to_table(User(**user), 'users', conn)
 
 def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str):
     cur = conn.cursor()
@@ -118,7 +118,7 @@ def get_user_from_sub(sub:str, pool:SimpleConnectionPool) -> dict | None:
             # to create a dictionary out of this zip the rows tuple, with the column names using cur.description
             columns = [desc[0] for desc in cur.description]
             d = dict(zip(columns, rows))
-            return d
+            return User(**d)
         else:
             return None
     finally:

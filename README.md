@@ -82,3 +82,6 @@ async def read_users_me(current_user: User = Depends(auth.get_current_active_use
     - users/me calls get_current_user() from auth... 
     - we are making it all the way to the auth.get_user() call 
     - oh yeaaa auth works baby, we are getting auth!
+    - let's have it return "PublicUser" information
+        - for now we'll just have it return email
+        - ok let's display the email now, since it will 100% be in json

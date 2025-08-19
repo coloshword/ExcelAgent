@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 import auth
-from models import User
+from models import User, PublicUser
 import googleapiclient.discovery
 import login_with_google
 from login_with_google import flow
@@ -82,8 +82,8 @@ async def login_for_access_token(response: Response, request: Request, form_data
     return {"access_token": access_token, "token_type": "bearer"}
 
 # endpoint that requires jwt token 
-@app.get("/users/me", response_model=User)
-async def read_users_me(current_user: User = Depends(auth.get_current_user)):
+@app.get("/users/me", response_model=PublicUser)
+async def read_users_me(current_user: PublicUser = Depends(auth.get_current_user)):
     """Get current user information."""
     return current_user
 

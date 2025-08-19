@@ -1,10 +1,9 @@
 ## auth.py
-import secrets 
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials 
 from passlib.context import CryptContext 
 from fastapi.security import OAuth2PasswordBearer
-from models import User, UserInDB
+from models import User, PublicUser
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
@@ -29,25 +28,6 @@ token_exception = HTTPException (
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-fake_users_db = {
-    "aceroliang": {
-        "username": "aceroliang",
-        "hashed_password": "$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW",
-        "disabled": False,
-    }
-}
-
-def verify_password(plain_password, hashed_password):
-    """
-    Verify a password against its hash
-    """
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password):
-    """
-    Generates a hash for a password..
-    """
-    return pwd_context.hash(password)
 
 def get_user(sub: str, pool:SimpleConnectionPool=Depends(get_pool)) -> BaseModel:
     """
@@ -59,25 +39,8 @@ def get_user(sub: str, pool:SimpleConnectionPool=Depends(get_pool)) -> BaseModel
             user as models.User
     """
     user = db_ops.get_user_from_sub(sub, pool)
-    print(user)
     return user
-    # get using the sub, pull the user dict!
-    #if username in db:
-    #    user_dict = db[username] # db is going to be a dictionary
-    #    return UserInDB(**user_dict)
     
-
-def authenticate_user(fake_db, username:str, password: str):
-    """
-    Checks if username and password are correct
-    """
-    user = get_user(username, fake_db)
-    if not user:
-        return False 
-    if not verify_password(password, user.hashed_password):
-        return False 
-    return user
-
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """
@@ -101,10 +64,13 @@ def get_token_from_cookie(request: Request):
     except KeyError:
         raise token_exception
 
-async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token: str = Depends(get_token_from_cookie)):
+async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token: str = Depends(get_token_from_cookie)) -> PublicUser:
     """
-    Get the current user from the JWT token.
-    PROTECTED! by the JWT token! won't be given access until JWT token is given 
+    Endpoint for auth purposes. Returns either the PublicUser if authenticated properly, or throws a 401 unauthorized error
+        Params:
+            pool: The SimpleConnectionPool to pull connections from
+            token: the auth token from the cookie (pulled from get_token_from_cookie
+        Returns:
     """
     # create an exception to throw if credentials can't be verified 
     credentials_exception = HTTPException (
@@ -118,9 +84,13 @@ async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token
     except JWTError:
         raise credentials_exception
     user = get_user(sub, pool)
+    print(type(user))
     if user is None:
         raise credentials_exception
-    return user
+    # create the PubilcUser from user 
+    print(user.model_dump())
+    public_user = PublicUser.model_validate(user.model_dump(include={'email'}))
+    return public_user
 
 async def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:
     '''

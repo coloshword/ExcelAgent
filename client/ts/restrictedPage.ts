@@ -18,7 +18,7 @@ async function setUp() {
             throw new Error("http error");
         }
         const res = await response.json();
-        displayText = res.message;
+        displayText = `Hello, ${res.email}`;
     } catch (error) {
         displayText = "You are unauthorized";
     }
