@@ -12,6 +12,8 @@ from psycopg2.pool import SimpleConnectionPool
 import db_ops
 from dotenv import load_dotenv
 import os 
+from pydantic import BaseModel
+from deps import get_pool
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
@@ -47,13 +49,21 @@ def get_password_hash(password):
     """
     return pwd_context.hash(password)
 
-def get_user(db, username:str):
+def get_user(sub: str, pool:SimpleConnectionPool=Depends(get_pool)) -> BaseModel:
     """
-    gets a user from the database
+    gets a user from the db, given the google_sub. Light wrapper of db_ops.get_user_with_sub()
+        Params:
+            pool: the pool to pull conns from
+            sub: the google_sub of the user to get 
+        Returns:
+            user as models.User
     """
-    if username in db:
-        user_dict = db[username] # db is going to be a dictionary
-        return UserInDB(**user_dict)
+    user = db_ops.get_user_from_sub(pool, sub)
+    # get using the sub, pull the user dict!
+    #if username in db:
+    #    user_dict = db[username] # db is going to be a dictionary
+    #    return UserInDB(**user_dict)
+    
 
 def authenticate_user(fake_db, username:str, password: str):
     """
@@ -89,7 +99,7 @@ def get_token_from_cookie(request: Request):
     except KeyError:
         raise token_exception
 
-async def get_current_user(token: str = Depends(get_token_from_cookie)):
+async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token: str = Depends(get_token_from_cookie)):
     """
     Get the current user from the JWT token.
     PROTECTED! by the JWT token! won't be given access until JWT token is given 
@@ -100,20 +110,15 @@ async def get_current_user(token: str = Depends(get_token_from_cookie)):
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub") # get the username from the JWT token 
+        sub: str = payload.get("id") # get the google_sub (id) from the jwt
     except JWTError:
         raise credentials_exception
-    
-    user = get_user(fake_users_db, username=username)
+    user = get_user(pool, sub)
     if user is None:
         raise credentials_exception
     return user
-
-def get_current_active_user():
-    return 'acero'
 
 async def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:
     '''

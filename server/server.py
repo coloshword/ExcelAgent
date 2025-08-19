@@ -12,6 +12,7 @@ from login_with_google import flow
 import googleapiclient.discovery
 from psycopg2.pool import SimpleConnectionPool
 from contextlib import asynccontextmanager
+from deps import get_pool
 import db_ops
 
 
@@ -24,17 +25,15 @@ origins = [
     "http://127.0.0.1:5500"
 ]    
 
-# create the simple connection pool for postgres 
-pool: SimpleConnectionPool | None = None 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global pool 
-    pool = db_ops.init_pool(1, 10)
+    app.state.pool = db_ops.init_pool(1, 10)
     try:
         yield # yielding so that the function doesn't return until app lifespan ends
     finally:
-        pool.closeall()
+        app.state.pool.closeall()
+
 
 app = FastAPI(lifespan=lifespan)
 
@@ -81,18 +80,14 @@ async def login_for_access_token(response: Response, request: Request, form_data
 
 # endpoint that requires jwt token 
 @app.get("/users/me", response_model=User)
-async def read_users_me(current_user: User = Depends(auth.get_current_active_user)):
+async def read_users_me(current_user: User = Depends(auth.get_current_user)):
     """Get current user information."""
     return current_user
 
 # this should be a protected endpoint 
-@app.get("/protected")
-async def protected_route(current_user: User = Depends(auth.get_current_active_user)):
-    return {"message": f"Hello {current_user.username}, this is a protected route!"}
-
-@app.post("/create_user")
-async def create_user():
-    pass
+#@app.get("/protected")
+#async def protected_route(current_user: User = Depends(auth.get_current_active_user)):
+#    return {"message": f"Hello {current_user.username}, this is a protected route!"}
 
 # continue with google 
 @app.get("/google")
@@ -104,7 +99,7 @@ async def continue_with_google_for_access_token():
     return RedirectResponse(auth_url)
 
 @app.get("/google/auth/redirect")
-async def google_auth_redirect(req: Request, response: Response):
+async def google_auth_redirect(req: Request, response: Response, pool:SimpleConnectionPool = Depends(get_pool)):
     """
     The Google auth redirect, after the user "accepts" to login to the application
     Responsible for checking if auth is successful.
@@ -122,7 +117,6 @@ async def google_auth_redirect(req: Request, response: Response):
         service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
         user_info = service.userinfo().get().execute() # the user_info 
         jwt = await auth.handle_create_user_or_login(user_info, pool)
-        print(jwt)
         response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")
         return {"message": "Authentication successful"}
     except Exception as e:

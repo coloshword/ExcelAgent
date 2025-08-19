@@ -49,3 +49,22 @@
 
 - now we need to set the jwt... how do we do that 
 we can do depedency injection  using response.set_cookie
+
+### auth pattern
+
+- a protected page should immediately make a call to something like:
+
+@app.get("/users/me", response_model=User)
+async def read_users_me(current_user: User = Depends(auth.get_current_active_user)):
+    """Get current user information."""
+    return current_user
+
+    - return 200: render the agent ui, & show user info (optionally!)
+    - 401? : show "unauthorized", link to login, and don't show any other data
+
+
+- work on creating a protected page...
+
+- for using pool.getconn(), make sure to use pool.putconn() to restore the connection
+
+- using Depends() --> your function needs a specific value for a parameter, and you have a function that allows you to get it, you can define the parameter as Depends() on the function that gives you that value, and fastapi chains that function to be called to give you that value 

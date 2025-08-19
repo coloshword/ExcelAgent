@@ -98,29 +98,60 @@ def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str
     cur.execute(query, (google_sub,))
     conn.commit()
 
-def is_user_in_db(pool: SimpleConnectionPool, google_sub: str) -> bool:
+def get_user_from_sub(pool: SimpleConnectionPool, sub:str) -> dict | None:
+    '''
+    gets the user given the sub
+        Params:
+            pool: the pool to get conns from
+            sub: the google_sub of the user to get
+    '''
+    conn: psycopg2.extensions.connection = pool.getconn()
+    cur: psycopg2.extensions.cursor = conn.cursor()
+    try:
+        query = '''
+            SELECT * from users as u
+            where u.google_sub = %s
+        '''
+        cur.execute(query, (sub,))
+        rows:tuple = cur.fetchone()
+        if rows:
+            # to create a dictionary out of this zip the rows tuple, with the column names using cur.description
+            columns = [desc[0] for desc in cur.description]
+            d = dict(zip(columns, rows))
+            return d
+        else:
+            return None
+    finally:
+        cur.close()
+        pool.putconn(conn)
+
+
+def is_user_in_db(pool:SimpleConnectionPool, sub:str) -> bool:
     '''
     Checks if the user has an existing account in the db 
         Params:
             pool: the pool to get conns from 
-            google_sub: the google_sub of the user to check if they exist in the db
+            sub: the google_sub of the user to check if they exist in the db
         Returns:
             True / False
     '''
     conn: psycopg2.extensions.connection = pool.getconn()
     cur: psycopg2.extensions.cursor = conn.cursor()
-    query = '''
-        SELECT * from users as u
-        where u.google_sub = %s 
-    '''
-    cur.execute(query, (google_sub,))
-    rows:tuple = cur.fetchone()
-    if rows:
-        return True
-    else:
-        return False 
+    try:
+        query = '''
+            SELECT * from users as u
+            where u.google_sub = %s 
+        '''
+        cur.execute(query, (sub,))
+        rows:tuple = cur.fetchone()
+        if rows:
+            return True
+        else:
+            return False 
+    finally:
+        cur.close()
+        pool.putconn(conn)
 
 if __name__ == "__main__":
     pool = init_pool(1, 10)
-    #create_user(pool)
-    is_user_in_db(pool, '12')
+    print(get_user_from_sub(pool, '102962311410165380381'))
