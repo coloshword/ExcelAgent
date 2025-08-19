@@ -98,7 +98,7 @@ def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str
     cur.execute(query, (google_sub,))
     conn.commit()
 
-def get_user_from_sub(pool: SimpleConnectionPool, sub:str) -> dict | None:
+def get_user_from_sub(sub:str, pool:SimpleConnectionPool) -> dict | None:
     '''
     gets the user given the sub
         Params:

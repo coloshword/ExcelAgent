@@ -58,7 +58,9 @@ def get_user(sub: str, pool:SimpleConnectionPool=Depends(get_pool)) -> BaseModel
         Returns:
             user as models.User
     """
-    user = db_ops.get_user_from_sub(pool, sub)
+    user = db_ops.get_user_from_sub(sub, pool)
+    print(user)
+    return user
     # get using the sub, pull the user dict!
     #if username in db:
     #    user_dict = db[username] # db is going to be a dictionary
@@ -69,7 +71,7 @@ def authenticate_user(fake_db, username:str, password: str):
     """
     Checks if username and password are correct
     """
-    user = get_user(fake_db, username)
+    user = get_user(username, fake_db)
     if not user:
         return False 
     if not verify_password(password, user.hashed_password):
@@ -115,7 +117,7 @@ async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token
         sub: str = payload.get("id") # get the google_sub (id) from the jwt
     except JWTError:
         raise credentials_exception
-    user = get_user(pool, sub)
+    user = get_user(sub, pool)
     if user is None:
         raise credentials_exception
     return user

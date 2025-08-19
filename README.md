@@ -71,3 +71,14 @@ async def read_users_me(current_user: User = Depends(auth.get_current_active_use
 
 - now to work on created page,
 - we should redirect after applying the cookie 
+
+- we are going to assume there's nothing wrong with the cookie.
+
+- that means we will just request from the endpoint as intended.
+
+- we seemed to have solved the problem of redirects, we found the right location..., the issue is that validation is failing at some point
+    - we do have an access_token...
+    let's see what is wrong with users.me
+    - users/me calls get_current_user() from auth... 
+    - we are making it all the way to the auth.get_user() call 
+    - oh yeaaa auth works baby, we are getting auth!

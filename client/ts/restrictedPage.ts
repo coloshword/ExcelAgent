@@ -7,7 +7,7 @@ async function setUp() {
     // make a fetch call for restricted content 
     let displayText = "";
     try {
-        const response = await fetch(endpointBase + "/protected", {
+        const response = await fetch(endpointBase + "/users/me", {
             method: "GET",
             mode: "cors",
             credentials: "include",
