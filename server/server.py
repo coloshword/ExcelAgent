@@ -119,7 +119,7 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
         credentials = flow.credentials
         service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
         user_info = service.userinfo().get().execute() # the user_info 
-        redirect_url = f"{config['client_uri']}/restrictedPage.html"
+        redirect_url = f"{config['client_uri']}/agent.html"
         response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
         jwt = await auth.handle_create_user_or_login(user_info, pool)
         response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")

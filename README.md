@@ -85,3 +85,15 @@ async def read_users_me(current_user: User = Depends(auth.get_current_active_use
     - let's have it return "PublicUser" information
         - for now we'll just have it return email
         - ok let's display the email now, since it will 100% be in json
+
+make restrictedPage allow either interaction with agent or not. 
+Conditional 
+- (not auth): You have to login to access the agent 
+            <login with google> flow 
+
+- if (auth): show the agent
+
+- some typescript perculiarity: 
+    RequestInit -- > ts type definition of anything you pass fetch to
+
+- async / await functions, return type you gotta wrap Promise<type> for it.
