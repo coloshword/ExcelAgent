@@ -97,3 +97,6 @@ Conditional
     RequestInit -- > ts type definition of anything you pass fetch to
 
 - async / await functions, return type you gotta wrap Promise<type> for it.
+
+- work on redirect back to login with google 
+    - redirect use window.location.href = <uri>

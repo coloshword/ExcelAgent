@@ -1,4 +1,4 @@
-import { fetchWrapper, checkAuthStatus } from "./utils.js"
+import { fetchWrapper, checkAuthStatus, redirectToLogin } from "./utils.js"
 
 interface PublicUser {
     email: string
@@ -18,14 +18,6 @@ function displayAuthenticatedResource(user: PublicUser) {
 }
 
 /**
- * 
- */
-function displayNotAuthenticated() {
-    const notAuth = document.querySelector(".not-auth-display") as HTMLDivElement;
-    notAuth.classList.remove('hidden');
-}
-
-/**
  * set up function to be called at window load time 
  */
 async function setUp() {
@@ -36,9 +28,8 @@ async function setUp() {
         const publicUserObj = userOrNull as PublicUser;
         displayAuthenticatedResource(publicUserObj);
     } else{
-        displayNotAuthenticated()
+        redirectToLogin()
     }
-     
 }
 
 setUp();

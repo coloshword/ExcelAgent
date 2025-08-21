@@ -46,3 +46,11 @@ export async function checkAuthStatus() {
         return null; // null if not auth
     }
 }
+
+/**
+ * Function to redirect back to the login page 
+ */
+export function redirectToLogin() {
+    const loginURI = `${config["client_uri"]}/login_with_google.html`;
+    window.location.href = loginURI;
+}
