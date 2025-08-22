@@ -1,4 +1,5 @@
 import { fetchWrapper, checkAuthStatus, redirectToLogin } from "./utils.js"
+import { ChatWidget } from "./components/ChatWidget.js";
 
 interface PublicUser {
     email: string
@@ -17,19 +18,24 @@ function displayAuthenticatedResource(user: PublicUser) {
     usernameDisplay.innerText = user.email;
 }
 
+function addChatWidget() {
+    const chatWidgetCont = document.querySelector(".chat-widget-cont") as HTMLDivElement;
+    const chatWidgetObj = new ChatWidget(chatWidgetCont, '20rem', '30rem');
+}
+
 /**
  * set up function to be called at window load time 
  */
 async function setUp() {
     // check if auth
     const userOrNull = await checkAuthStatus();
-    if (userOrNull) {
-        // cast userOrNull
-        const publicUserObj = userOrNull as PublicUser;
-        displayAuthenticatedResource(publicUserObj);
-    } else{
+    if (! userOrNull) {
         redirectToLogin()
     }
+    // cast userOrNull
+    const publicUserObj = userOrNull as PublicUser;
+    displayAuthenticatedResource(publicUserObj);
+    addChatWidget();
 }
 
 setUp();
