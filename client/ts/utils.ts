@@ -9,14 +9,19 @@ import config from "./config.js";
  *  params: the object with all Parameters
  * 
  */
-export async function fetchWrapper<T>(endpoint: string, requestMethod: string, params: object, includeCredentials:boolean=true): Promise<T>{
+export async function fetchWrapper<T>(endpoint: string, requestMethod: string, params: object | null=null, includeCredentials:boolean=true): Promise<T>{
     const endpointBase:string = config['server_uri'];
     const requestObject: RequestInit = {
         method: requestMethod,
         mode: "cors",
+        headers: {'Content-Type': 'application/json'}
     }
     if (includeCredentials) {
         requestObject["credentials"] = "include"
+    }
+    if (params) {
+        // add body with JSON.stringify
+        requestObject["body"] = JSON.stringify(params);
     }
     const fullEndpoint = `${endpointBase}${endpoint}`
     // make the request 
@@ -29,6 +34,7 @@ export async function fetchWrapper<T>(endpoint: string, requestMethod: string, p
         const res = await response.json();
         return res;
     } catch (error) {
+        console.log(error);
         throw error; // propagate error for outer layer try catch
     }
 }
@@ -40,7 +46,7 @@ export async function fetchWrapper<T>(endpoint: string, requestMethod: string, p
  */
 export async function checkAuthStatus() {
     try {
-        return await fetchWrapper("/users/me", "GET", {}, true);
+        return await fetchWrapper("/users/me", "GET")
     } catch (error){
         console.log("Auth check failed:", error);
         return null; // null if not auth

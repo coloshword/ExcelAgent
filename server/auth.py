@@ -84,11 +84,9 @@ async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token
     except JWTError:
         raise credentials_exception
     user = get_user(sub, pool)
-    print(type(user))
     if user is None:
         raise credentials_exception
     # create the PubilcUser from user 
-    print(user.model_dump())
     public_user = PublicUser.model_validate(user.model_dump(include={'email'}))
     return public_user
 

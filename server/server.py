@@ -19,10 +19,11 @@ import json
 import lm_ops
 
 
-#ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
 class ChatMessage(BaseModel):
-    message: str | None
-    attachment: str | None
+    text: str | None
+
+class AddChat(BaseModel):
+    text: str
 
 origins = [
     "http://127.0.0.1:5500"
@@ -92,15 +93,16 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
 
-@app.get("/chat") # add the current_user dependency to wall it off behind auth
-async def chatWithLLM(client: OpenAI = Depends(get_lm_api_client), current_user: PublicUser = Depends(auth.get_current_user) ):
+@app.post("/chat") # add the current_user dependency to wall it off behind auth
+async def chatWithLLM(user_msg: AddChat, client: OpenAI = Depends(get_lm_api_client), current_user: PublicUser = Depends(auth.get_current_user) ):
     # example response 
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {
             "role": "user",
-            "content": "Explain to me how AI works in 15 words"
+            "content": user_msg.text
         }
     ]
+    print(messages)
     model = "gemini-2.5-flash"
     return lm_ops.make_LM_request(client, model, messages)

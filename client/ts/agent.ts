@@ -38,8 +38,10 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
         try {
             const lmReply: Record<string, string> = await fetchWrapper(
                 '/chat',
-                "GET",
-                {},
+                "POST",
+                {
+                    "text": text
+                }
             )
             if (!('content' in lmReply)) {
                 addMsgToChatHistory("[Error: no content in reply");

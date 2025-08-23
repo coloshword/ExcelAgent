@@ -126,6 +126,7 @@ this way our web component is encapsulated
             - ok so now actual LM output is added instead of generic string
             - clean up some of the nesting on this 
             - cleaned up the nesting, ok so now we will work on actually sending the payload properly this time.
+                - this means adding params to the actual function
     
 
 - concurrency in the server:
