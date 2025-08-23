@@ -37,6 +37,7 @@ export class ChatWidget {
         }
         this.chatInput.value = '';
         // add the msg as a span to the chat history
+        this.addMsgToChatHistory(msg);
         // call the callback
         this.onSendCallback(msg);
     }
@@ -45,7 +46,7 @@ export class ChatWidget {
      * Add a message to the chat History. Public to let users to 
      * @param msg: the message to add 
      */
-    public addMessageToChatHistory(msg: string) {
+    public addMsgToChatHistory(msg: string) {
         const msgSpan = document.createElement("span");
         msgSpan.innerText = msg;
         this.chatHistory.appendChild(msgSpan);

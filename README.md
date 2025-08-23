@@ -121,6 +121,11 @@ this way our web component is encapsulated
         - we need to make sure to wall it off with auth, so if you are not authenticated, it shouldn't allow a call
         - now the endpoint only works when authentication exists 
         - now let's make it actually add to the client ! 
+        - callback function almost correctly adds to the chat history. Firstly, we are not adding the actual lm output yet, and we also aren't passing in the correct message to the lm input
+            - actually add the LM output instead of some generic string
+            - ok so now actual LM output is added instead of generic string
+            - clean up some of the nesting on this 
+            - cleaned up the nesting, ok so now we will work on actually sending the payload properly this time.
     
 
 - concurrency in the server:
