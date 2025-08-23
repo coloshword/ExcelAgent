@@ -12,9 +12,11 @@ from login_with_google import flow
 import googleapiclient.discovery
 from psycopg2.pool import SimpleConnectionPool
 from contextlib import asynccontextmanager
-from deps import get_pool
+from deps import get_pool, get_lm_api_client
+from openai import OpenAI
 import db_ops
 import json
+import lm_ops
 
 
 #ChatMessage: Object Model for a chat message. A ChatMessage can be either an attachment (base64 str) or message (str)
@@ -32,6 +34,7 @@ with open("config.json") as f:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.pool = db_ops.init_pool(1, 10)
+    app.state.llm_client = lm_ops.init_api_client()
     try:
         yield # yielding so that the function doesn't return until app lifespan ends
     finally:
@@ -48,49 +51,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-'''
-Endpoint for chatting with the LLM in the backend 
-'''
-@app.post("/chat")
-async def add_message(msg: ChatMessage):
-    return {"received_message": msg.message, "received_attachment": msg.attachment}
-
-@app.get("/")
-async def root():
-    return {"message": "FASTAPI Auth demo"}
-
-# login endpoint to get a jwt token 
-@app.post("/token")
-async def login_for_access_token(response: Response, request: Request, form_data: OAuth2PasswordRequestForm = Depends()): 
-    """
-    Authenticate user and return access token.
-    """ 
-    user = auth.authenticate_user(auth.fake_users_db, form_data.username, form_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    access_token_expires = timedelta(minutes=auth.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = auth.create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
-    )
-
-    response.set_cookie(key="access_token", value=access_token, httponly=True, samesite="lax", secure=False, path="/")
-    return {"access_token": access_token, "token_type": "bearer"}
-
 # endpoint that requires jwt token 
 @app.get("/users/me", response_model=PublicUser)
 async def read_users_me(current_user: PublicUser = Depends(auth.get_current_user)):
     """Get current user information."""
     return current_user
-
-# this should be a protected endpoint 
-#@app.get("/protected")
-#async def protected_route(current_user: User = Depends(auth.get_current_active_user)):
-#    return {"message": f"Hello {current_user.username}, this is a protected route!"}
 
 # continue with google 
 @app.get("/google")
@@ -126,3 +91,16 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
         return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
+
+@app.get("/chat") # add the current_user dependency to wall it off behind auth
+async def chatWithLLM(client: OpenAI = Depends(get_lm_api_client), current_user: PublicUser = Depends(auth.get_current_user) ):
+    # example response 
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {
+            "role": "user",
+            "content": "Explain to me how AI works in 15 words"
+        }
+    ]
+    model = "gemini-2.5-flash"
+    return lm_ops.make_LM_request(client, model, messages)

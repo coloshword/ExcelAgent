@@ -102,12 +102,7 @@ Conditional
     - redirect use window.location.href = <uri>
 ### Aug 22
 - finish the chat component 
-    - add event listeners to work for send to do something, just print it to console and set 
-    - hooked up the handle sending function being called, let's just have it do everything except call the callback fn
-    - now its showing up, now what we want to make sure happens is that it gets added to the 
-    chat history
-    - chat history now gets text added, we'll just format it a little, column wise with a gap
-    - also need to add an event listener to have it listen to a 'Enter' key stroke
+    - work on adding a callback function in the constructor
 
     
 - hook it up to an LLM endpoint 
@@ -116,3 +111,44 @@ this way our web component is encapsulated
 - importance of arrow methods --> this normally refers to the thing that called the function, but in the case where we are creating the web component as a class, we want this() to refer to the object as a whole, so we make it an arrrow function 
 
 
+### Aug 23:
+- finish the chat component 
+    - callback function should hook up to an endpoint that spews out LLM chat
+    - callback function should call an endpoint
+    - server should make a request to an LLM
+        - return that content to the frontend interface 
+        - LLM is called properly
+        - we need to make sure to wall it off with auth, so if you are not authenticated, it shouldn't allow a call
+        - now the endpoint only works when authentication exists 
+        - now let's make it actually add to the client ! 
+    
+
+- concurrency in the server:
+    - i should be chilling as long as all my server code is truly async and non blocking
+    - we will use uvicorn in production 
+    - holy shit ground breaking: define a endpoint as "sync" and not async in fastapi, and it will automatically offload it to threadpool executor and not stall everyone 
+
+    @app.get("/slow")
+    def slow_route():
+        time.sleep(5)  # totally blocking
+        return {"message": "done"}
+    
+    - this is safe because it is synchronous, and won't kill people trying to login for 10 seconds, but if we defined it as async it would be a problem. 
+    - remember messages is just a list of dicts.
+        each dict is of the form:
+        {
+            "role":
+            "content":
+        }
+    
+    - /chat works right now 
+
+    - <T> == type parameter: type placeholder, how you can make a type generic 
+    
+    so to make a function generic 
+
+    async function fetchWrapper<T>(Params): Promise<T>
+        - so not only do you have to type the return as <T>, but you also have to put <T> next to the function name
+        - and this changes how you call the function: you have to do <T> next to the function calls to provide the output type 
+
+        const resp = await fetchWrapper<User>(); // for example

@@ -10,6 +10,7 @@ export class ChatWidget {
     chatInput!: HTMLInputElement;
     sendChatBtn!:HTMLButtonElement;
     chatHistory!:HTMLDivElement;
+    onSendCallback: (text: string) => void | Promise<void>;
     /**
      * The constructor for ChatWidget
      * @param parent: the parent element to attach the chatWidget to 
@@ -18,10 +19,12 @@ export class ChatWidget {
         parent: HTMLElement,
         width: string,
         height: string,
+        onSendCallback: (text: string) => void | Promise<void>
     ) {
         this.parent = parent;
         this.width = width;
         this.height = height;
+        this.onSendCallback = onSendCallback;
         this.init();
     }
     /**
@@ -34,6 +37,15 @@ export class ChatWidget {
         }
         this.chatInput.value = '';
         // add the msg as a span to the chat history
+        // call the callback
+        this.onSendCallback(msg);
+    }
+
+    /**
+     * Add a message to the chat History. Public to let users to 
+     * @param msg: the message to add 
+     */
+    public addMessageToChatHistory(msg: string) {
         const msgSpan = document.createElement("span");
         msgSpan.innerText = msg;
         this.chatHistory.appendChild(msgSpan);

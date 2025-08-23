@@ -9,7 +9,7 @@ import config from "./config.js";
  *  params: the object with all Parameters
  * 
  */
-export async function fetchWrapper(endpoint: string, requestMethod: string, params: object, includeCredentials:boolean=true): Promise<object>{
+export async function fetchWrapper<T>(endpoint: string, requestMethod: string, params: object, includeCredentials:boolean=true): Promise<T>{
     const endpointBase:string = config['server_uri'];
     const requestObject: RequestInit = {
         method: requestMethod,
