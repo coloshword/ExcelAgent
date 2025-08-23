@@ -7,6 +7,9 @@ export class ChatWidget {
     private parent: HTMLElement;
     private width: string;
     private height: string;
+    chatInput!: HTMLInputElement;
+    sendChatBtn!:HTMLButtonElement;
+    chatHistory!:HTMLDivElement;
     /**
      * The constructor for ChatWidget
      * @param parent: the parent element to attach the chatWidget to 
@@ -14,12 +17,45 @@ export class ChatWidget {
     constructor (
         parent: HTMLElement,
         width: string,
-        height: string
+        height: string,
     ) {
         this.parent = parent;
         this.width = width;
         this.height = height;
         this.init();
+    }
+    /**
+     * Function to handle sending of chats. To be used as part of the event listener. we make it an arrow function to always refer to the ChatWidget object 
+     */
+    private addUserMsg = async () => {
+        const msg: string = this.chatInput.value;
+        if (!msg) {
+            return;
+        }
+        this.chatInput.value = '';
+        // add the msg as a span to the chat history
+        const msgSpan = document.createElement("span");
+        msgSpan.innerText = msg;
+        this.chatHistory.appendChild(msgSpan);
+    }
+
+    /**
+     * Function to handle pressing enter on the input 
+     * @param e: The Keyboard Event 
+     */
+    private handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            this.addUserMsg();
+        }
+    };
+
+    /**
+     * sets up the eventListeners
+     */
+    private setUpEventListeners() {
+        this.sendChatBtn.addEventListener('click', this.addUserMsg);
+        this.chatInput.addEventListener('keyup', this.handleKeyDown);
     }
 
     /**
@@ -28,24 +64,28 @@ export class ChatWidget {
     private toDOM() {
         const htmlContent =`
             <div class="chat-widget-chat-widget">
-                <span>This is the chat widget</span>
-                <input type="text"/>
+                <div class="chat-widget-chat-history"></div>
+                <div class="chat-widget-input-cont">
+                    <input id="chat-widget-msg-input" type="text" class="chat-widget-input"/>
+                    <button class="chat-widget-send-chat-btn">Send</button>
+                </div>
             </div>
         ` 
         this.parent.innerHTML = htmlContent;
-        const widget = document.querySelector(".chat-widget-chat-widget") as HTMLDivElement;
+        const widget = this.parent.querySelector(".chat-widget-chat-widget") as HTMLDivElement;
         widget.style.setProperty("--chat-width", this.width);
         widget.style.setProperty("--chat-height", this.height);
+        // cache common elements 
+        this.chatInput = this.parent.querySelector(".chat-widget-input") as HTMLInputElement;
+        this.sendChatBtn = this.parent.querySelector(".chat-widget-send-chat-btn") as HTMLButtonElement;
+        this.chatHistory = this.parent.querySelector(".chat-widget-chat-history") as HTMLDivElement;
     }
-
-    /**
-     * addUserMessage: adds the user message.
-     */
 
     /**
      * the init function 
      */
     private init() {
         this.toDOM();
+        this.setUpEventListeners();
     }
 }

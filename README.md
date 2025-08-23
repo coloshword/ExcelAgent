@@ -100,3 +100,19 @@ Conditional
 
 - work on redirect back to login with google 
     - redirect use window.location.href = <uri>
+### Aug 22
+- finish the chat component 
+    - add event listeners to work for send to do something, just print it to console and set 
+    - hooked up the handle sending function being called, let's just have it do everything except call the callback fn
+    - now its showing up, now what we want to make sure happens is that it gets added to the 
+    chat history
+    - chat history now gets text added, we'll just format it a little, column wise with a gap
+    - also need to add an event listener to have it listen to a 'Enter' key stroke
+
+    
+- hook it up to an LLM endpoint 
+- for our web component, make sure to just query this.parent, instead of document.querySelector
+this way our web component is encapsulated 
+- importance of arrow methods --> this normally refers to the thing that called the function, but in the case where we are creating the web component as a class, we want this() to refer to the object as a whole, so we make it an arrrow function 
+
+

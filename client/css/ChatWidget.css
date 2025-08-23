@@ -7,3 +7,16 @@
     height: var(--chat-height, 400px);
     border: 1px solid #ccc;
 }
+
+.chat-widget-input-cont {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    justify-content: center;
+}
+
+.chat-widget-chat-history {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
