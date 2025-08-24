@@ -10,6 +10,9 @@ export class ChatWidget {
     chatInput!: HTMLInputElement;
     sendChatBtn!:HTMLButtonElement;
     chatHistory!:HTMLDivElement;
+    addAttachmentBtn!:HTMLButtonElement;
+    attachmentInput!:HTMLInputElement;
+
     onSendCallback: (text: string) => void | Promise<void>;
     /**
      * The constructor for ChatWidget
@@ -64,11 +67,47 @@ export class ChatWidget {
     };
 
     /**
+     * Reads a file object and return base 64
+     * params: file: 
+     */
+    private fileToBase64(file: File): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = () => reject(reader.error ?? new Error("read error"));
+            reader.onload = () => resolve(reader.result as string);
+            reader.readAsDataURL(file);
+        })
+    }
+
+    /**
+     * Event listener function to get the input element to add an atachment
+     * @param e: the event for the 'click'
+     */
+    private inputAddAttachment = async (e: Event) => {
+        if (!(e.target instanceof HTMLInputElement)) return;
+        const file = e.target.files?.[0]; // so we just return null if files is not defined / null! 
+        if (!file) return;
+        // read the file and update the status
+        const fileB64 = await this.fileToBase64(file);
+        console.log(fileB64)
+    };
+
+    /**
+     * Event listener function for the 'add attachment' button
+     */
+    private handleAddAttachmentBtn = () => {
+        console.log('add attachment was called');
+        this.attachmentInput.click();
+    }
+    /**
      * sets up the eventListeners
      */
     private setUpEventListeners() {
         this.sendChatBtn.addEventListener('click', this.addUserMsg);
         this.chatInput.addEventListener('keyup', this.handleKeyDown);
+        // add attachmentInput file listener to the input file, and then make button press trigger that input
+        this.attachmentInput.addEventListener('change', this.inputAddAttachment);
+        this.addAttachmentBtn.addEventListener('click', this.handleAddAttachmentBtn);
     }
 
     /**
@@ -79,6 +118,8 @@ export class ChatWidget {
             <div class="chat-widget-chat-widget">
                 <div class="chat-widget-chat-history"></div>
                 <div class="chat-widget-input-cont">
+                    <button class="chat-widget-add-attachment-btn">Add attachment</button>
+                    <input class="hidden chat-widget-file-input" type="file" accept=".xlsx, .xls, .csv"/>
                     <input id="chat-widget-msg-input" type="text" class="chat-widget-input"/>
                     <button class="chat-widget-send-chat-btn">Send</button>
                 </div>
@@ -92,6 +133,9 @@ export class ChatWidget {
         this.chatInput = this.parent.querySelector(".chat-widget-input") as HTMLInputElement;
         this.sendChatBtn = this.parent.querySelector(".chat-widget-send-chat-btn") as HTMLButtonElement;
         this.chatHistory = this.parent.querySelector(".chat-widget-chat-history") as HTMLDivElement;
+        this.addAttachmentBtn = this.parent.querySelector(".chat-widget-add-attachment-btn") as HTMLButtonElement;
+        this.attachmentInput = this.parent.querySelector(".chat-widget-file-input") as HTMLInputElement;
+        console.log(this.attachmentInput);
     }
 
     /**

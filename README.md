@@ -158,3 +158,23 @@ this way our web component is encapsulated
         - and this changes how you call the function: you have to do <T> next to the function calls to provide the output type 
 
         const resp = await fetchWrapper<User>(); // for example
+
+        - some more casting 
+        (<HTMLInputElement> e.target) --> can cast the element 
+
+        - optional chaining: --> `?`: only access this property if the thing before is not null or undefined, otherwise just return undefined 
+        - typing of resolve, reject: it's going to be a Promise type string
+
+-- basic chatting component is done
+- now we want to finish including an attachment
+- we want to include attachments
+- we want to include the attachment button and include the attachment input
+- make it a button, and have an invisible input element 
+- have an attach button, its going to be the thing that triggers the attachment 
+
+### Aug 24.
+- work on the attach button and wire it to the backend 
+    - attach button now properly reads the file as b64
+    - work on 1. displaying the file as uploaded
+    - save it as a state so that we can actually send it in during the send portion of the chat 
+    - update the backend endpoint to include the file upload 

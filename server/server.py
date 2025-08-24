@@ -103,6 +103,5 @@ async def chatWithLLM(user_msg: AddChat, client: OpenAI = Depends(get_lm_api_cli
             "content": user_msg.text
         }
     ]
-    print(messages)
     model = "gemini-2.5-flash"
     return lm_ops.make_LM_request(client, model, messages)
