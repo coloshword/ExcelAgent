@@ -1,4 +1,9 @@
-//chatInterface.ts: the reusable web component to display the chatInterface 
+//ChatWidget.ts: the reusable web component to display the chatInterface 
+
+interface FileData {
+    filename: string;
+    fileContent: string; // the b64 file content
+}
 
 /**
  * ChatWidget: defines a chat interface as a component
@@ -12,7 +17,8 @@ export class ChatWidget {
     chatHistory!:HTMLDivElement;
     addAttachmentBtn!:HTMLButtonElement;
     attachmentInput!:HTMLInputElement;
-
+    attachments: FileData[] = [];
+    attachmentsDisplay!:HTMLDivElement;
     onSendCallback: (text: string) => void | Promise<void>;
     /**
      * The constructor for ChatWidget
@@ -80,6 +86,29 @@ export class ChatWidget {
     }
 
     /**
+     * Displays the uploaded files based on the attachments object 
+     */
+    private displayUploadedFiles(): void {
+        if (this.attachments.length == 0) {
+            return;
+        }
+        // get rid of hidden as there are attachments 
+        this.attachmentsDisplay.classList.remove("hidden");
+        // remove all children for updates 
+        while (this.attachmentsDisplay.firstChild) {
+            this.attachmentsDisplay.removeChild(this.attachmentsDisplay.firstChild)
+        }
+        for (let i = 0; i < this.attachments.length; i++) {
+            const attachmentDisplay = document.createElement("div");
+            const attachmentFile = this.attachments[i]; // attachmentFile is of type FileData
+            const attachmentFilename = attachmentFile?.filename ? attachmentFile.filename : "<No Name file upload>"
+            attachmentDisplay.innerText = attachmentFilename;
+            attachmentDisplay.classList.add('chat-widget-attachments-display-cell')
+            this.attachmentsDisplay.appendChild(attachmentDisplay);
+        }
+    }
+
+    /**
      * Event listener function to get the input element to add an atachment
      * @param e: the event for the 'click'
      */
@@ -89,14 +118,21 @@ export class ChatWidget {
         if (!file) return;
         // read the file and update the status
         const fileB64 = await this.fileToBase64(file);
-        console.log(fileB64)
+        // get the filename 
+        const filename: string = file.name;
+        // add the attachment to the list, conforming to the FileData interface 
+        this.attachments.push({
+            filename: filename,
+            fileContent: fileB64
+        });
+        // update the visuals 
+        this.displayUploadedFiles();
     };
 
     /**
      * Event listener function for the 'add attachment' button
      */
     private handleAddAttachmentBtn = () => {
-        console.log('add attachment was called');
         this.attachmentInput.click();
     }
     /**
@@ -117,6 +153,7 @@ export class ChatWidget {
         const htmlContent =`
             <div class="chat-widget-chat-widget">
                 <div class="chat-widget-chat-history"></div>
+                <div class="hidden chat-widget-attachments-display"></div>
                 <div class="chat-widget-input-cont">
                     <button class="chat-widget-add-attachment-btn">Add attachment</button>
                     <input class="hidden chat-widget-file-input" type="file" accept=".xlsx, .xls, .csv"/>
@@ -135,7 +172,7 @@ export class ChatWidget {
         this.chatHistory = this.parent.querySelector(".chat-widget-chat-history") as HTMLDivElement;
         this.addAttachmentBtn = this.parent.querySelector(".chat-widget-add-attachment-btn") as HTMLButtonElement;
         this.attachmentInput = this.parent.querySelector(".chat-widget-file-input") as HTMLInputElement;
-        console.log(this.attachmentInput);
+        this.attachmentsDisplay = this.parent.querySelector(".chat-widget-attachments-display") as HTMLDivElement;
     }
 
     /**

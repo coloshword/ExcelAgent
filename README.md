@@ -172,9 +172,23 @@ this way our web component is encapsulated
 - make it a button, and have an invisible input element 
 - have an attach button, its going to be the thing that triggers the attachment 
 
+
 ### Aug 24.
 - work on the attach button and wire it to the backend 
     - attach button now properly reads the file as b64
     - work on 1. displaying the file as uploaded
+        - we need a display updated files list 
+        - file list is missing something, it's missing the actual name
+        - we want the name to display...
+        - so instead of a list of strings, we'll do a list of objects 
+        - we are now displaying the file after uploaded using the new interface
+
     - save it as a state so that we can actually send it in during the send portion of the chat 
+        - save it as a state! We will call it an attachments list!
+        - state is now saved 
+
     - update the backend endpoint to include the file upload 
+        - working on this now 
+        - we need to upload the whole as a optional payload
+
+- if we define an interface, we just use it as a type, you don't instantiate the interface at add time, you create an object that conforms to the interface 
