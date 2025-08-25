@@ -1,9 +1,5 @@
 //ChatWidget.ts: the reusable web component to display the chatInterface 
-
-interface FileData {
-    filename: string;
-    fileContent: string; // the b64 file content
-}
+import type { FileData } from "../models"
 
 /**
  * ChatWidget: defines a chat interface as a component
@@ -19,7 +15,7 @@ export class ChatWidget {
     attachmentInput!:HTMLInputElement;
     attachments: FileData[] = [];
     attachmentsDisplay!:HTMLDivElement;
-    onSendCallback: (text: string) => void | Promise<void>;
+    onSendCallback: (text: string, attachments: FileData[]) => void | Promise<void>;
     /**
      * The constructor for ChatWidget
      * @param parent: the parent element to attach the chatWidget to 
@@ -28,7 +24,7 @@ export class ChatWidget {
         parent: HTMLElement,
         width: string,
         height: string,
-        onSendCallback: (text: string) => void | Promise<void>
+        onSendCallback: (text: string, attachments: FileData[]) => void | Promise<void>
     ) {
         this.parent = parent;
         this.width = width;
@@ -48,7 +44,7 @@ export class ChatWidget {
         // add the msg as a span to the chat history
         this.addMsgToChatHistory(msg);
         // call the callback
-        this.onSendCallback(msg);
+        this.onSendCallback(msg, this.attachments);
     }
 
     /**

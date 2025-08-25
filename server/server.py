@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 import auth
-from models import User, PublicUser
+from models import User, PublicUser, ChatMessage
 import googleapiclient.discovery
 import login_with_google
 from login_with_google import flow
@@ -17,10 +17,8 @@ from openai import OpenAI
 import db_ops
 import json
 import lm_ops
+from typing import List
 
-
-class ChatMessage(BaseModel):
-    text: str | None
 
 class AddChat(BaseModel):
     text: str
@@ -94,7 +92,7 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
 
 @app.post("/chat") # add the current_user dependency to wall it off behind auth
-async def chatWithLLM(user_msg: AddChat, client: OpenAI = Depends(get_lm_api_client), current_user: PublicUser = Depends(auth.get_current_user) ):
+async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), current_user: PublicUser = Depends(auth.get_current_user) ):
     # example response 
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},

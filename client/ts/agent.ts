@@ -1,5 +1,6 @@
 import { fetchWrapper, checkAuthStatus, redirectToLogin } from "./utils.js"
 import { ChatWidget } from "./components/ChatWidget.js";
+import type { FileData } from "./models.js";
 import  config  from "./config.js";
 
 interface PublicUser {
@@ -7,6 +8,7 @@ interface PublicUser {
 }
 
 type AddMsg = (text: string) => void;
+
 
 /**
  * function to display the authenticatedResource
@@ -34,13 +36,15 @@ function displayAuthenticatedResource(user: PublicUser) {
  * @param addMsgToChatHistory 
  */
 function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
-    return async function chatWidgetCallback(text: string) {
+    return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
         try {
+            console.log(attachments);
             const lmReply: Record<string, string> = await fetchWrapper(
                 '/chat',
                 "POST",
                 {
-                    "text": text
+                    "text": msg,
+                    "attachments": attachments
                 }
             )
             if (!('content' in lmReply)) {
