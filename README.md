@@ -190,5 +190,18 @@ this way our web component is encapsulated
     - update the backend endpoint to include the file upload 
         - working on this now 
         - we need to upload the whole as a optional payload
+        - works now!
 
 - if we define an interface, we just use it as a type, you don't instantiate the interface at add time, you create an object that conforms to the interface 
+
+### Aug 25. 
+- start implementation of the actual agentic portion 
+
+- next step:
+1. Add tasks + Sheet Upload + Preview 
+- tasks will represent a task the agent can do, and will be created 
+- incur "memory" with the task id as query param 
+- "memory", let's do chats with memory 
+- keep a persistent "chat" to get, and then we can just pull it 
+
+    Table tasks(task_id, sub, last_activity_at)

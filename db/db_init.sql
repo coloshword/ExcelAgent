@@ -17,6 +17,12 @@ CREATE TABLE users (
     last_login TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE tasks (
+    task_id BIGSERIAL PRIMARY KEY,
+    google_sub TEXT UNIQUE NOT NULL,
+    last_activity_at TIMESTAMPTZ DEFAULT NOW() 
+)
+
 -- psql commands
 -- \list: shows all the dbs 
 -- connect: 
