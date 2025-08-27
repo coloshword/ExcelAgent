@@ -14,6 +14,13 @@ class User(BaseModel):
     last_login: datetime
 
 '''
+Defines a Task
+'''
+class Task(BaseModel):
+    google_sub: str
+    last_activity_at: datetime
+
+'''
 PublicUser: Model that defines a User exposed to the public
 '''
 class PublicUser(BaseModel):

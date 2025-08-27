@@ -18,6 +18,7 @@ import db_ops
 import json
 import lm_ops
 from typing import List
+from Task import Task
 
 
 class AddChat(BaseModel):
@@ -92,7 +93,7 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
 
 @app.post("/chat") # add the current_user dependency to wall it off behind auth
-async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), current_user: PublicUser = Depends(auth.get_current_user) ):
+async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: PublicUser = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
     # example response 
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
@@ -102,4 +103,7 @@ async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api
         }
     ]
     model = "gemini-2.5-flash"
+    if user_msg.attachments:
+        # create a task if an attachment is provided 
+        #new_task = Task(pool, google_sub)
     return lm_ops.make_LM_request(client, model, messages)

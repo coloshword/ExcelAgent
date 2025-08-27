@@ -21,6 +21,15 @@ CREATE TABLE tasks (
     task_id BIGSERIAL PRIMARY KEY,
     google_sub TEXT UNIQUE NOT NULL,
     last_activity_at TIMESTAMPTZ DEFAULT NOW() 
+);
+
+CREATE TABLE sheets (
+    sheet_id BIGSERIAL PRIMARY KEY,
+    task_id BIGINT NOT NULL REFERENCES tasks(task_id) ON DELETE CASCADE,
+    sheet_name TEXT NOT NULL,
+    bytes BYTEA NOT NULL,
+    size_bytes BIGINT NOT NULL,
+    created_on TIMESTAMPTZ DEFAULT NOW()
 )
 
 -- psql commands

@@ -205,3 +205,34 @@ this way our web component is encapsulated
 - keep a persistent "chat" to get, and then we can just pull it 
 
     Table tasks(task_id, sub, last_activity_at)
+    - we should be able to create a new task when triggering a 
+    - should we include chat log inside of tasks? 
+    - i don't care about chat log for now, we just need to have a way to remember sessions 
+    - each user can create a task
+
+### Aug 26. 
+    GOAL:
+        - TASK does have a chat log, that only makes sense...
+        - For now we'll make it attachment only
+        - we should be able to create a task when an attachment is made. 
+        - and then we should be able to retrieve attachment if its a past task 
+        - don't worry about chat log
+        - don't worry about "history"
+        - simply create a task when a attachment is made 
+
+    - chat right now is an empty thing...
+    - how do i make it so that we know from the endpoint whether or not to pull up a chat history?
+    - provide a task id 
+    - task endpoint creates a new task
+
+    -SQL: REFERENCES --> foreign keys, so REFERENCES tasks(task_id), says that this value in this other table must match a value that exists in the tasks table, specifically it must match a task_id
+
+    - ON DELETE CASCADE --> if the referenced row is deleted, this is deleted as well.
+
+# IMPORTANT TODOS: do not delete this section
+- check state in google oath and make sure this can't be spoofed
+- create_task should include Idempotency-Key 
+
+# simple idea:
+    - create a simple task if attachment is added 
+    - simply create a task

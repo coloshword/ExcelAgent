@@ -4,7 +4,7 @@ from psycopg2.pool import SimpleConnectionPool
 import psycopg2.extensions
 from dotenv import load_dotenv
 import os 
-from models import User
+from models import User, Task
 import pydantic
 from datetime import datetime
 
@@ -63,7 +63,7 @@ def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.e
     cur = conn.cursor()
     # build the query 
     model_dict = model.model_dump()
-    query = build_insert_query_from_dict(model_dict, "users")
+    query = build_insert_query_from_dict(model_dict, table)
     # create the data (just a tuple of values)
     data = tuple(model_dict.values())
     cur.execute(query, data)
@@ -76,17 +76,30 @@ def create_user(pool: SimpleConnectionPool, google_user_info: dict):
             pool: the pool to get conns from 
             google_user_info: the google_user_info dictionary 
     '''
-
     conn = pool.getconn()
-    user = {
-        "google_sub": google_user_info["id"],
-        "email": google_user_info["email"],
-        "created_on": datetime.now(),
-        "last_login": datetime.now()
-    }
-    # create a user object 
-    #call the insert wrapper 
-    insert_model_to_table(User(**user), 'users', conn)
+    try:
+        user = {
+            "google_sub": google_user_info["id"],
+            "email": google_user_info["email"],
+            "created_on": datetime.now(),
+            "last_login": datetime.now()
+        }
+        # create a user object 
+        #call the insert wrapper 
+        insert_model_to_table(User(**user), 'users', conn)
+    finally:
+        pool.putconn(conn)
+
+def create_task(pool: SimpleConnectionPool, google_sub:str):
+    conn = pool.getconn()
+    try:
+        task = {
+            "google_sub": google_sub,
+            "last_activity_at": datetime.now()
+        }
+        insert_model_to_table(Task(**task), 'tasks', conn)
+    finally:
+        pool.putconn(conn)
 
 def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str):
     cur = conn.cursor()
