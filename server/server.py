@@ -68,7 +68,7 @@ async def continue_with_google_for_access_token():
     return RedirectResponse(auth_url)
 
 @app.get("/google/auth/redirect")
-async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_pool)):
+def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_pool)):
     """
     The Google auth redirect, after the user "accepts" to login to the application
     Responsible for checking if auth is successful.
@@ -87,7 +87,7 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
         user_info = service.userinfo().get().execute() # the user_info 
         redirect_url = f"{config['client_uri']}/agent.html"
         response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
-        jwt = await auth.handle_create_user_or_login(user_info, pool)
+        jwt = auth.handle_create_user_or_login(user_info, pool)
         response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")
         return response
     except Exception as e:

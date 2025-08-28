@@ -89,7 +89,7 @@ async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token
     #public_user = PublicUser.model_validate(user.model_dump(include={'email'}))
     return user
 
-async def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:
+def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:
     '''
     handles logging in and gets the jwt, from the google sub
         Returns:
@@ -105,7 +105,7 @@ async def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:
     jwt = create_access_token(data_dict) # default cookie with expires = 30 mins
     return jwt 
 
-async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPool) -> str:
+def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPool) -> str:
     '''
     handles create user or login. Either creates a new user in the db, or logs them in. Returns the jwt header  
         Params:
@@ -116,6 +116,7 @@ async def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnec
     # see if user is in the db
     google_sub = google_user_info['id']
     if not db_ops.is_user_in_db(pool, google_sub):
-        await db_ops.create_user(pool, google_user_info)
-    jwt = await login_and_get_jwt(pool, google_sub)
+        db_ops.create_user(pool, google_user_info)
+    print("this hasn't failed")
+    jwt = login_and_get_jwt(pool, google_sub)
     return jwt

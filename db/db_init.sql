@@ -19,7 +19,7 @@ CREATE TABLE users (
 
 CREATE TABLE tasks (
     task_id BIGSERIAL PRIMARY KEY,
-    google_sub TEXT UNIQUE NOT NULL,
+    google_sub TEXT NOT NULL,
     last_activity_at TIMESTAMPTZ DEFAULT NOW() 
 );
 
