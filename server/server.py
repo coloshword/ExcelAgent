@@ -53,9 +53,10 @@ app.add_middleware(
 
 # endpoint that requires jwt token 
 @app.get("/users/me", response_model=PublicUser)
-async def read_users_me(current_user: PublicUser = Depends(auth.get_current_user)):
+async def read_users_me(current_user: User = Depends(auth.get_current_user)):
     """Get current user information."""
-    return current_user
+    public_user = PublicUser.model_validate(current_user.model_dump(include={'email'}))
+    return public_user
 
 # continue with google 
 @app.get("/google")
@@ -93,7 +94,7 @@ async def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
 
 @app.post("/chat") # add the current_user dependency to wall it off behind auth
-async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: PublicUser = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
+async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: User = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
     # example response 
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
@@ -104,6 +105,7 @@ async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api
     ]
     model = "gemini-2.5-flash"
     if user_msg.attachments:
-        # create a task if an attachment is provided 
-        #new_task = Task(pool, google_sub)
+        #print(user_msg.attachments)
+        google_sub = user.google_sub
+        new_task = Task(pool, google_sub)
     return lm_ops.make_LM_request(client, model, messages)
