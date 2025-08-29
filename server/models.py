@@ -31,5 +31,4 @@ class FileData(BaseModel):
     fileContent: str
 
 class ChatMessage(BaseModel):
-    text: Optional[str] = None
-    attachments: Optional[List[FileData]] = None
+    text: str

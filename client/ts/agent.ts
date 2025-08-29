@@ -38,13 +38,11 @@ function displayAuthenticatedResource(user: PublicUser) {
 function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
         try {
-            console.log(attachments);
             const lmReply: Record<string, string> = await fetchWrapper(
                 '/chat',
                 "POST",
                 {
                     "text": msg,
-                    "attachments": attachments
                 }
             )
             if (!('content' in lmReply)) {
@@ -55,6 +53,22 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
         }
         catch (err) {
             addMsgToChatHistory(`[Error: failed to reach server]: ${err}`)
+        }
+
+        if (! attachments) {
+            return;
+        }
+        // if there is an attachment, create the task
+
+        try {
+            const task = await fetchWrapper(
+                '/task',
+                "POST",
+                {}
+            )
+        }
+        catch (err) {
+            addMsgToChatHistory(`[Error: Failed to create a task]: ${err}`)
         }
     };
 }

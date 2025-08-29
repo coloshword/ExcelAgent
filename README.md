@@ -229,10 +229,20 @@ this way our web component is encapsulated
 
     - ON DELETE CASCADE --> if the referenced row is deleted, this is deleted as well.
 
+### Aug 27.
+    - tasks are now created
+    - we should also create a sheet? 
+    - hold up... sheet should only be created if task is created...
+    - that means we need to include the task in the endpoint...
+    - separate create sheet endpoint...
+
+    - REFACTOR:
+        - make tasks its own endpoint, to create a task 
+        - make sheets its own endpoint...
+        - basically the frontend should be defining the logic on when to call each endpoint specifically!
+
 # IMPORTANT TODOS: do not delete this section
 - check state in google oath and make sure this can't be spoofed
 - create_task should include Idempotency-Key 
 
-# simple idea:
-    - create a simple task if attachment is added 
-    - simply create a task
+    
