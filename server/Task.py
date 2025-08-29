@@ -1,4 +1,4 @@
-# task.py: defines the backend funtions relating to taks 
+# task.py: defines the backend funtions relating to tasks
 import db_ops
 from psycopg2.pool import SimpleConnectionPool
 

@@ -4,9 +4,10 @@ from psycopg2.pool import SimpleConnectionPool
 import psycopg2.extensions
 from dotenv import load_dotenv
 import os 
-from models import User, Task
+from models import User, Task, Sheet
 import pydantic
 from datetime import datetime
+import base64
 
 '''
 we should use SimpleConnectionPool, it's a process wide pool that contains
@@ -91,6 +92,12 @@ def create_user(pool: SimpleConnectionPool, google_user_info: dict):
         pool.putconn(conn)
 
 def create_task(pool: SimpleConnectionPool, google_sub:str):
+    '''
+    creates a task in the database
+        Params:
+            pool: the pool to get the conns from 
+            google_sub: the google_sub of the user creating the task
+    '''
     conn = pool.getconn()
     try:
         task = {
@@ -99,6 +106,34 @@ def create_task(pool: SimpleConnectionPool, google_sub:str):
         }
         insert_model_to_table(Task(**task), 'tasks', conn)
     finally:
+        pool.putconn(conn)
+
+def create_sheet(pool: SimpleConnectionPool, google_sub:str, task_id:str, filename:str, b64:str):
+    '''
+    creates a sheet in the database 
+        Params:
+            pool: the pool to get the conns from 
+            google_sub: the google_sub of the user creating the sheet
+            task_id: the task_id of the user creating the sheet
+            filename: the filename of the associated sheet that the user submitted in the client,
+            b64: file as b64
+    '''
+    # convert back to bytes 
+    # string so convert back to ascii
+    b64_bytes = b64.encode('ascii')
+    file_as_bytes = base64.b64decode(b64_bytes)
+    conn = pool.getconn()
+    file_size = len(file_as_bytes)
+    try: 
+        sheet = {
+            "task_id": task_id,
+            "sheet_name": filename,
+            "bytes": file_as_bytes,
+            "size_bytes": file_size,
+            "created_on": datetime.now()
+        }
+        insert_model_to_table(Sheet(sheet), 'sheets', conn)
+    finally: 
         pool.putconn(conn)
 
 def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str):

@@ -62,13 +62,28 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
 
         try {
             const task = await fetchWrapper(
-                '/task',
+                "/task",
                 "POST",
                 {}
             )
         }
         catch (err) {
             addMsgToChatHistory(`[Error: Failed to create a task]: ${err}`)
+        }
+
+        //create a sheet 
+        try {
+            const sheet = await fetchWrapper(
+                "/sheet",
+                "POST",
+                {
+                    "task_id": "5",
+                    "attachments": attachments
+                } 
+            )
+        }
+        catch (err) {
+            addMsgToChatHistory(`[Error: Failed to create sheet]: ${err}`)
         }
     };
 }

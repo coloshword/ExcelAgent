@@ -21,6 +21,16 @@ class Task(BaseModel):
     last_activity_at: datetime
 
 '''
+Defines a sheet
+'''
+class Sheet(BaseModel):
+    task_id: str
+    sheet_name: str
+    bytes: bytes 
+    size_bytes: int
+    created_on: datetime
+
+'''
 PublicUser: Model that defines a User exposed to the public
 '''
 class PublicUser(BaseModel):

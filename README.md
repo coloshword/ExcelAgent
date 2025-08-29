@@ -241,8 +241,16 @@ this way our web component is encapsulated
         - make sheets its own endpoint...
         - basically the frontend should be defining the logic on when to call each endpoint specifically!
 
+### Aug 28.
+    - task is now refactored to be an endpoint
+    - idea: we should also make creating a sheet an endpoint, and pass everything from client
+    - for now we'll test the endpoint by using random values, not a real taskid !
+    - we need real taskid since it references it...
+    - wait let's jsut use a predefined one 
+
 # IMPORTANT TODOS: do not delete this section
 - check state in google oath and make sure this can't be spoofed
 - create_task should include Idempotency-Key 
+
 
     

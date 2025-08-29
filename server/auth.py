@@ -117,6 +117,5 @@ def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPo
     google_sub = google_user_info['id']
     if not db_ops.is_user_in_db(pool, google_sub):
         db_ops.create_user(pool, google_user_info)
-    print("this hasn't failed")
     jwt = login_and_get_jwt(pool, google_sub)
     return jwt
