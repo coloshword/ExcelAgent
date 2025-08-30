@@ -248,6 +248,15 @@ this way our web component is encapsulated
     - we need real taskid since it references it...
     - wait let's jsut use a predefined one 
 
+## Aug 29.
+    - we are now properly creating sheets
+    - next goal... create a task and return it on new chat
+    - once we return it, we add it to the query params
+
+    - create a separate component, the past chats components on the left hand side. 
+        - 1 refactor insert_model_to_table to return the created id 
+        ** DONOT RETURN FROM A finally block **
+
 # IMPORTANT TODOS: do not delete this section
 - check state in google oath and make sure this can't be spoofed
 - create_task should include Idempotency-Key 

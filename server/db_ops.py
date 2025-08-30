@@ -40,7 +40,7 @@ def init_pool(min_connections: int, max_connections:int) -> SimpleConnectionPool
     )
     return pool
 
-def build_insert_query_from_dict(d, table):
+def build_insert_query_from_dict(d:dict, table:str, id_field_name:str) -> str:
     '''
     wrapper function to create an insert query from dictionary.
         Params:
@@ -50,10 +50,10 @@ def build_insert_query_from_dict(d, table):
     # the number of placeholders is the length of d 
     # we need to specify the column names, which in this case will match the dictionary KEYS
     table_columns = list(d.keys())
-    query = f"INSERT INTO {table} ({", ".join(table_columns)}) VALUES ({", ".join(['%s' for i in range(len(d))])});"
+    query = f"INSERT INTO {table} ({", ".join(table_columns)}) VALUES ({", ".join(['%s' for i in range(len(d))])}) RETURNING {id_field_name};"
     return query
 
-def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.extensions.connection):
+def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.extensions.connection, id_field_name:str):
     '''
     wrapper function to insert a model into a table. Does not do any checking of types or size of dictionary, make sure the parameters match.
         Params:
@@ -64,11 +64,14 @@ def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.e
     cur = conn.cursor()
     # build the query 
     model_dict = model.model_dump()
-    query = build_insert_query_from_dict(model_dict, table)
+    query = build_insert_query_from_dict(model_dict, table, id_field_name)
     # create the data (just a tuple of values)
     data = tuple(model_dict.values())
     cur.execute(query, data)
+    created_id = cur.fetchone()[0]
     conn.commit()
+    return created_id
+
 
 def create_user(pool: SimpleConnectionPool, google_user_info: dict):
     '''
@@ -87,7 +90,7 @@ def create_user(pool: SimpleConnectionPool, google_user_info: dict):
         }
         # create a user object 
         #call the insert wrapper 
-        insert_model_to_table(User(**user), 'users', conn)
+        insert_model_to_table(User(**user), 'users', conn, 'id')
     finally:
         pool.putconn(conn)
 
@@ -104,11 +107,12 @@ def create_task(pool: SimpleConnectionPool, google_sub:str):
             "google_sub": google_sub,
             "last_activity_at": datetime.now()
         }
-        insert_model_to_table(Task(**task), 'tasks', conn)
+        task_id = insert_model_to_table(Task(**task), 'tasks', conn, 'task_id')
+        return task_id
     finally:
         pool.putconn(conn)
 
-def create_sheet(pool: SimpleConnectionPool, google_sub:str, task_id:str, filename:str, b64:str):
+def create_sheet(pool: SimpleConnectionPool, google_sub:str, task_id:int, filename:str, b64:str):
     '''
     creates a sheet in the database 
         Params:
@@ -124,6 +128,7 @@ def create_sheet(pool: SimpleConnectionPool, google_sub:str, task_id:str, filena
     file_as_bytes = base64.b64decode(b64_bytes)
     conn = pool.getconn()
     file_size = len(file_as_bytes)
+    print(type(task_id))
     try: 
         sheet = {
             "task_id": task_id,
@@ -132,7 +137,7 @@ def create_sheet(pool: SimpleConnectionPool, google_sub:str, task_id:str, filena
             "size_bytes": file_size,
             "created_on": datetime.now()
         }
-        insert_model_to_table(Sheet(sheet), 'sheets', conn)
+        insert_model_to_table(Sheet(**sheet), 'sheets', conn, 'sheet_id')
     finally: 
         pool.putconn(conn)
 

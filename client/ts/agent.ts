@@ -59,9 +59,9 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
             return;
         }
         // if there is an attachment, create the task
-
+        let taskId;
         try {
-            const task = await fetchWrapper(
+            taskId = await fetchWrapper(
                 "/task",
                 "POST",
                 {}
@@ -72,12 +72,15 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
         }
 
         //create a sheet 
+        if (! taskId) {
+            return;
+        }
         try {
             const sheet = await fetchWrapper(
                 "/sheet",
                 "POST",
                 {
-                    "task_id": "5",
+                    "task_id": taskId,
                     "attachments": attachments
                 } 
             )

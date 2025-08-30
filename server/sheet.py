@@ -2,7 +2,7 @@
 import db_ops
 from psycopg2.pool import SimpleConnectionPool
 
-def create_sheet_in_db(pool:SimpleConnectionPool, google_sub:str, task_id, filename, b64):
+def create_sheet_in_db(pool:SimpleConnectionPool, google_sub:str, task_id:int, filename, b64):
     '''
     wrapper of db_ops.create_sheet
         Params:

@@ -24,7 +24,7 @@ class Task(BaseModel):
 Defines a sheet
 '''
 class Sheet(BaseModel):
-    task_id: str
+    task_id: int
     sheet_name: str
     bytes: bytes 
     size_bytes: int

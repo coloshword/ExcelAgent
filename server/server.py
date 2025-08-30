@@ -26,7 +26,7 @@ class AddChat(BaseModel):
     text: str
 
 class CreateSheetRequest(BaseModel):
-    task_id: str
+    task_id: int
     attachments: list[FileData]
 
 origins = [
@@ -103,6 +103,7 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
 def create_sheet(payload: CreateSheetRequest, user: User=Depends(auth.get_current_user), pool:SimpleConnectionPool=Depends(get_pool)):
     google_sub = user.google_sub
     task_id = payload.task_id
+    print(type(task_id))
     # for now just create one sheet with the first attachemnt 
     attachments = payload.attachments
     attachment:FileData = attachments[0]
@@ -114,7 +115,7 @@ def create_sheet(payload: CreateSheetRequest, user: User=Depends(auth.get_curren
 @app.post("/task")
 def create_task(user: User=Depends(auth.get_current_user), pool:SimpleConnectionPool=Depends(get_pool)):
     google_sub = user.google_sub
-    task.create_task_in_db(pool, google_sub)
+    return task.create_task_in_db(pool, google_sub)
 
 
 @app.post("/chat") # add the current_user dependency to wall it off behind auth
