@@ -260,6 +260,20 @@ this way our web component is encapsulated
 
         - ok now we need a refactor: only create a new task_id if there is no task_id in the query params...
 
+### Aug 30.
+    - we are pivoting to excel editing the whole thing..., meaning everything will be excel based
+    - what can we keep?
+    - task will remain the spreadsheet
+    - for today, we will keep it simple
+        - ignore "memory" of sheets for now 
+        - simply we will create a task, and not remember anything for now
+        - refreshes will reset the status but that is fine
+
+1: Refactor -- don't create a sheet, it's ok to create a task though  -- done 
+
+2: Work on the UI: move the chat interface to the side and add the editable grid.
+    
+
 # IMPORTANT TODOS: do not delete this section
 - check state in google oath and make sure this can't be spoofed
 - create_task should include Idempotency-Key 

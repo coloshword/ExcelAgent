@@ -6,3 +6,4 @@ venv
 client/dist/
 **/*.d.ts
 google_auth.json
+client/node_modules

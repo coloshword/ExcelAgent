@@ -30,27 +30,6 @@ function displayAuthenticatedResource(user: PublicUser) {
  */
 function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
-        try {
-            const lmReply: Record<string, string> = await fetchWrapper(
-                '/chat',
-                "POST",
-                {
-                    "text": msg,
-                }
-            )
-            if (!('content' in lmReply)) {
-                addMsgToChatHistory("[Error: no content in reply");
-                return
-            }
-            addMsgToChatHistory(lmReply.content);
-        }
-        catch (err) {
-            addMsgToChatHistory(`[Error: failed to reach server]: ${err}`)
-        }
-
-        if (! attachments) {
-            return;
-        }
         // if there is no task id in the query param, we create a task 
         const url = new URL(window.location.href);
         const queryParamTaskId: string | null = url.searchParams.get("taskId");
@@ -75,18 +54,37 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
 
         setQueryParam('taskId', String(taskId));
         try {
-            const sheet = await fetchWrapper(
-                "/sheet",
+            const lmReply: Record<string, string> = await fetchWrapper(
+                '/chat',
                 "POST",
                 {
-                    "task_id": taskId,
-                    "attachments": attachments
-                } 
+                    "text": msg,
+                }
             )
+            if (!('content' in lmReply)) {
+                addMsgToChatHistory("[Error: no content in reply");
+                return
+            }
+            addMsgToChatHistory(lmReply.content);
         }
         catch (err) {
-            addMsgToChatHistory(`[Error: Failed to create sheet]: ${err}`)
+            addMsgToChatHistory(`[Error: failed to reach server]: ${err}`)
         }
+
+        // we are going to ignore 
+        //try {
+        //    const sheet = await fetchWrapper(
+        //        "/sheet",
+        //        "POST",
+        //        {
+        //            "task_id": taskId,
+        //            "attachments": attachments
+        //        } 
+        //    )
+        //}
+        //catch (err) {
+        //    addMsgToChatHistory(`[Error: Failed to create sheet]: ${err}`)
+        //}
     };
 }
 
