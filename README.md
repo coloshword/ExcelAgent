@@ -256,6 +256,7 @@ this way our web component is encapsulated
     - create a separate component, the past chats components on the left hand side. 
         - 1 refactor insert_model_to_table to return the created id 
         ** DONOT RETURN FROM A finally block **
+        - now we need to add the task_id to the query param
 
 # IMPORTANT TODOS: do not delete this section
 - check state in google oath and make sure this can't be spoofed

@@ -1,4 +1,4 @@
-import { fetchWrapper, checkAuthStatus, redirectToLogin } from "./utils.js"
+import { fetchWrapper, checkAuthStatus, redirectToLogin, setQueryParam } from "./utils.js"
 import { ChatWidget } from "./components/ChatWidget.js";
 import type { FileData } from "./models.js";
 import  config  from "./config.js";
@@ -23,13 +23,6 @@ function displayAuthenticatedResource(user: PublicUser) {
     usernameDisplay.innerText = user.email;
 }
 
-//async function chatWidgetCallBack(text: string) {
-//    const lmReply: Record<string, string> = await fetchWrapper(
-//        '/chat',
-//        "GET",
-//        {},
-//    )
-//}
 
 /**
  * Factory to create callbacks for chatWidget
@@ -70,11 +63,13 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
         catch (err) {
             addMsgToChatHistory(`[Error: Failed to create a task]: ${err}`)
         }
-
+        // set the query param
         //create a sheet 
         if (! taskId) {
             return;
         }
+
+        setQueryParam('taskId', String(taskId));
         try {
             const sheet = await fetchWrapper(
                 "/sheet",

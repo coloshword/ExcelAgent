@@ -60,3 +60,12 @@ export function redirectToLogin() {
     const loginURI = `${config["client_uri"]}/login_with_google.html`;
     window.location.href = loginURI;
 }
+
+/**
+ * Function to set queryParam
+ */
+export function setQueryParam(paramName: string, paramValue: string) {
+    const url = new URL(window.location.href);
+    url.searchParams.set(paramName, paramValue)
+    window.history.replaceState( {paramValue}, "", url);
+}
