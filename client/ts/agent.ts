@@ -51,17 +51,21 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
         if (! attachments) {
             return;
         }
-        // if there is an attachment, create the task
-        let taskId;
-        try {
-            taskId = await fetchWrapper(
-                "/task",
-                "POST",
-                {}
-            )
-        }
-        catch (err) {
-            addMsgToChatHistory(`[Error: Failed to create a task]: ${err}`)
+        // if there is no task id in the query param, we create a task 
+        const url = new URL(window.location.href);
+        const queryParamTaskId: string | null = url.searchParams.get("taskId");
+        let taskId: number|null = null;
+        if (queryParamTaskId == null) {
+            try {
+                taskId = await fetchWrapper(
+                    "/task",
+                    "POST",
+                    {}
+                )
+            }
+            catch (err) {
+                addMsgToChatHistory(`[Error: Failed to create a task]: ${err}`)
+            }
         }
         // set the query param
         //create a sheet 
