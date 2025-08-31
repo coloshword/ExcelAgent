@@ -2,12 +2,42 @@
     margin: 0;
 }
 
-.content-main {
+.auth-display {
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
+    height: 100svh;
+    width: 100svw;
 }
 
 .hidden {
     display: none;
+}
+
+.datagrid-cont {
+    width: 100svw;
+}
+
+.username-disp-and-chat-widget-cont {
+    display: flex;
+    flex-direction: column;
+}
+
+.datagrid-cont {
+    border: 1px solid red;
+    flex-grow: 1;
+}
+
+.header {
+    border: 1px solid green;
+    height: 15svh;
+    width: 100%;
+}
+
+.grid-and-lm-chat-cont {
+    display: flex;
+    flex-direction: row;
+    height: 85svh;
+    width: 100%;
 }

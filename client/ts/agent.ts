@@ -1,5 +1,6 @@
 import { fetchWrapper, checkAuthStatus, redirectToLogin, setQueryParam } from "./utils.js"
 import { ChatWidget } from "./components/ChatWidget.js";
+import { GridWidget } from "./components/GridWidget.js";
 import type { FileData } from "./models.js";
 import  config  from "./config.js";
 
@@ -98,6 +99,14 @@ function addChatWidget() {
 }
 
 /**
+ * Adds the datagrid to the DOM
+ */
+function addDataGrid() {
+    const dataGridCont = document.querySelector(".datagrid-cont") as HTMLDivElement;
+    const dataGridObj = new GridWidget(dataGridCont);
+}
+
+/**
  * set up function to be called at window load time 
  */
 async function setUp() {
@@ -109,6 +118,7 @@ async function setUp() {
     // cast userOrNull
     const publicUserObj = userOrNull as PublicUser;
     displayAuthenticatedResource(publicUserObj);
+    addDataGrid();
     addChatWidget();
 }
 

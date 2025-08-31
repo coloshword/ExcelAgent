@@ -272,6 +272,10 @@ this way our web component is encapsulated
 1: Refactor -- don't create a sheet, it's ok to create a task though  -- done 
 
 2: Work on the UI: move the chat interface to the side and add the editable grid.
+
+### Aug 31.
+     - work on creating an editable sheet -- make it a good size 
+            - ... is the spread operator, populates the elements by actually spreading, versus just creating "holes" that aren't actually populated with values 
     
 
 # IMPORTANT TODOS: do not delete this section
