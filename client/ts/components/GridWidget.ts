@@ -3,8 +3,8 @@ import type {CanvasDataGrid}  from 'canvas-datagrid';
 
 export class GridWidget {
     private parent: HTMLDivElement;
-    private initRows: number = 100;
-    private initColumns: number = 26;
+    private initRows: number = 40;
+    private initColumns: number = 24;
     private data: string[][] = [];
     private grid: CanvasDataGrid | null = null;
 
@@ -19,8 +19,12 @@ export class GridWidget {
     private toDOM() {
         const gridElement: HTMLDivElement = document.createElement('div');
         this.grid = canvasDatagrid({
+            style: {
+                cellWidth: 68, 
+                cellHeight: 20
+            },
             parentNode: gridElement,
-        });
+        } as any);
         this.parent.append(gridElement);
         this.grid.attributes.columnHeaderClickBehavior = 'select';
         this.grid.style.columnHeaderCellHorizontalAlignment = 'center';

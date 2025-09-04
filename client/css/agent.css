@@ -5,7 +5,6 @@
 .auth-display {
     display: flex;
     justify-content: center;
-    align-items: center;
     flex-direction: column;
     height: 100svh;
     width: 100svw;
@@ -25,12 +24,10 @@
 }
 
 .datagrid-cont {
-    border: 1px solid red;
     flex-grow: 1;
 }
 
 .header {
-    border: 1px solid green;
     height: 15svh;
     width: 100%;
 }

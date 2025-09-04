@@ -283,4 +283,5 @@ this way our web component is encapsulated
 - create_task should include Idempotency-Key 
 
 
-    
+### Sep 03.
+- Let's fix the issue where the sizing is a little off... the width and height of the sheet and everything combined is a little too much.. 
