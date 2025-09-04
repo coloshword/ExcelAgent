@@ -29,8 +29,10 @@ function displayAuthenticatedResource(user: PublicUser) {
  * Factory to create callbacks for chatWidget
  * @param addMsgToChatHistory 
  */
-function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
+function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: GridWidget) {
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
+        const currentGridData = datagridWidget.getGridData()
+        console.log(currentGridData);
         // if there is no task id in the query param, we create a task 
         const url = new URL(window.location.href);
         const queryParamTaskId: string | null = url.searchParams.get("taskId");
@@ -60,6 +62,7 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
                 "POST",
                 {
                     "text": msg,
+                    "sheet_content": currentGridData
                 }
             )
             if (!('content' in lmReply)) {
@@ -89,12 +92,12 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg) {
     };
 }
 
-function addChatWidget() {
+function addChatWidget(dataGridObj: GridWidget) {
     const chatWidgetCont = document.querySelector(".chat-widget-cont") as HTMLDivElement;
     const addMsgToChatHistory: AddMsg = (text:string) => {
         chatWidgetObj.addMsgToChatHistory(text)
     }
-    const chatWidgetCallback = makeChatWidgetCallback(addMsgToChatHistory);
+    const chatWidgetCallback = makeChatWidgetCallback(addMsgToChatHistory, dataGridObj);
     const chatWidgetObj = new ChatWidget(chatWidgetCont, '20rem', '30rem', chatWidgetCallback);
 }
 
@@ -104,6 +107,7 @@ function addChatWidget() {
 function addDataGrid() {
     const dataGridCont = document.querySelector(".datagrid-cont") as HTMLDivElement;
     const dataGridObj = new GridWidget(dataGridCont);
+    return dataGridObj;
 }
 
 /**
@@ -118,8 +122,8 @@ async function setUp() {
     // cast userOrNull
     const publicUserObj = userOrNull as PublicUser;
     displayAuthenticatedResource(publicUserObj);
-    addDataGrid();
-    addChatWidget();
+    const dataGridObj = addDataGrid();
+    addChatWidget(dataGridObj);
 }
 
 setUp();

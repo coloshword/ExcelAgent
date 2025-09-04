@@ -122,6 +122,8 @@ def create_task(user: User=Depends(auth.get_current_user), pool:SimpleConnection
 @app.post("/chat") # add the current_user dependency to wall it off behind auth
 async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: User = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
     # example response 
+    print("chat was called")
+    print(user_msg.sheet_content)
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {

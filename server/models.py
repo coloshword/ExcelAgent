@@ -42,3 +42,4 @@ class FileData(BaseModel):
 
 class ChatMessage(BaseModel):
     text: str
+    sheet_content: List[List[str]]

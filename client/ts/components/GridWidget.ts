@@ -35,6 +35,13 @@ export class GridWidget {
         this.initializeGrid();
     }
 
+    public getGridData() {
+        if (this.grid) {
+            return this.grid.data;
+        }
+        console.log("Grid is not initialized");
+    }
+
     /**
      * initializes the grid, either with prefilled data or just an empty
      */
