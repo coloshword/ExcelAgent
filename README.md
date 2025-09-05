@@ -287,3 +287,9 @@ this way our web component is encapsulated
 - Let's fix the issue where the sizing is a little off... the width and height of the sheet and everything combined is a little too much.. 
 - sizing fixed 
 - let's work on actually parsing the data at send time... we are going to take the data at the send text and try to send it to actually trigger the agentic workflow 
+
+### Sep 04.
+- creates df when sending a current level 
+- we need to create an "lm_request" object for some level of persistence 
+
+- sql: JSONB type: stores json as binary format, binary preparsed format. Many python libraries can read these seamlessly

@@ -19,6 +19,7 @@ import json
 import lm_ops
 import task
 import sheet
+import agent_functions
 from typing import List
 
 
@@ -120,16 +121,17 @@ def create_task(user: User=Depends(auth.get_current_user), pool:SimpleConnection
 
 
 @app.post("/chat") # add the current_user dependency to wall it off behind auth
-async def chatWithLLM(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: User = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
+async def agent_request(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: User = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
     # example response 
-    print("chat was called")
-    print(user_msg.sheet_content)
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {
-            "role": "user",
-            "content": user_msg.text
-        }
-    ]
-    model = "gemini-2.5-flash"
-    return lm_ops.make_LM_request(client, model, messages)
+    df = agent_functions.convert_sheet_array_to_df(user_msg.sheet_content)
+    request = user_msg.text
+    #messages=[
+    #    {"role": "system", "content": "You are a helpful assistant."},
+    #    {
+    #        "role": "user",
+    #        "content": user_msg.text
+    #    }
+    #]
+    #model = "gemini-2.5-flash"
+    #return lm_ops.make_LM_request(client, model, messages)
+    return 'Making a LM request'

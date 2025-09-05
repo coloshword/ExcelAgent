@@ -36,10 +36,10 @@ export class GridWidget {
     }
 
     public getGridData() {
-        if (this.grid) {
-            return this.grid.data;
+        if (!this.grid) {
+            return []
         }
-        console.log("Grid is not initialized");
+        return this.grid.data;
     }
 
     /**

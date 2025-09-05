@@ -32,7 +32,6 @@ function displayAuthenticatedResource(user: PublicUser) {
 function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: GridWidget) {
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
         const currentGridData = datagridWidget.getGridData()
-        console.log(currentGridData);
         // if there is no task id in the query param, we create a task 
         const url = new URL(window.location.href);
         const queryParamTaskId: string | null = url.searchParams.get("taskId");

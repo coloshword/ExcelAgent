@@ -30,7 +30,13 @@ CREATE TABLE sheets (
     bytes BYTEA NOT NULL,
     size_bytes BIGINT NOT NULL,
     created_on TIMESTAMPTZ DEFAULT NOW()
-)
+);
+
+CREATE TABLE agent_state (
+    agent_id BIGSERIAL PRIMARY KEY,
+    agent_messages JSONB NOT NULL,
+    sheet_status JSONB NOT NULL
+);
 
 -- psql commands
 -- \list: shows all the dbs 

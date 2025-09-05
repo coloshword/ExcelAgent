@@ -8,13 +8,14 @@ from models import User, Task, Sheet
 import pydantic
 from datetime import datetime
 import base64
+from typing import List
+import pandas as pd 
 
 '''
 we should use SimpleConnectionPool, it's a process wide pool that contains
 a set of database connections (con and cursor), so we don't need to 
 create a new one per request
 '''
-
 def init_pool(min_connections: int, max_connections:int) -> SimpleConnectionPool:
     '''
     initiates a SimpleConnectionPool with min_connections, and max_connections
@@ -71,7 +72,6 @@ def insert_model_to_table(model: pydantic.BaseModel, table:str, conn: psycopg2.e
     created_id = cur.fetchone()[0]
     conn.commit()
     return created_id
-
 
 def create_user(pool: SimpleConnectionPool, google_user_info: dict):
     '''
@@ -205,6 +205,15 @@ def is_user_in_db(pool:SimpleConnectionPool, sub:str) -> bool:
         cur.close()
         pool.putconn(conn)
 
+def initialize_agent_state_in_db(pool: SimpleConnectionPool, messages: List[dict], sheet_state: pd.DataFrame):
+    '''
+    Creates an agent state in the database 
+        Params:
+            pool: the pool to get connections from
+            messages: the initial state of the agent message history
+            sheet_state: the dataframe representing the state of the sheet at request time
+    '''
+    pass 
+
 if __name__ == "__main__":
     pool = init_pool(1, 10)
-    print(get_user_from_sub(pool, '102962311410165380381'))
