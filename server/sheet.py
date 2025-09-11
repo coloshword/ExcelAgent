@@ -1,5 +1,5 @@
 # sheet.py: defiens the backend functions relating to sheets 
-import db_ops
+from . import db_ops
 from psycopg2.pool import SimpleConnectionPool
 
 def create_sheet_in_db(pool:SimpleConnectionPool, google_sub:str, task_id:int, filename, b64):

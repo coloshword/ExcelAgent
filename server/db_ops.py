@@ -4,7 +4,7 @@ from psycopg2.pool import SimpleConnectionPool
 import psycopg2.extensions
 from dotenv import load_dotenv
 import os 
-from models import User, Task, Sheet
+from .models import User, Task, Sheet
 import pydantic
 from datetime import datetime
 import base64
@@ -213,7 +213,11 @@ def initialize_agent_state_in_db(pool: SimpleConnectionPool, messages: List[dict
             messages: the initial state of the agent message history
             sheet_state: the dataframe representing the state of the sheet at request time
     '''
-    pass 
+    query = """
+    INSERT into agent_state (agent_messages, sheet_status)
+    VALUES (%s, %s)
+    returning agent_id
+    """
 
 if __name__ == "__main__":
     pool = init_pool(1, 10)

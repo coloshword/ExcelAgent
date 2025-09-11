@@ -43,3 +43,7 @@ class FileData(BaseModel):
 class ChatMessage(BaseModel):
     text: str
     sheet_content: List[List[str]]
+
+class AgentState(BaseModel):
+    agent_messages: List[dict]
+    sheet_status: List[List[str]]

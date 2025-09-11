@@ -54,40 +54,20 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
             return;
         }
 
-        setQueryParam('taskId', String(taskId));
-        try {
-            const lmReply: Record<string, string> = await fetchWrapper(
-                '/chat',
-                "POST",
-                {
-                    "text": msg,
-                    "sheet_content": currentGridData
-                }
-            )
-            if (!('content' in lmReply)) {
-                addMsgToChatHistory("[Error: no content in reply");
-                return
-            }
-            addMsgToChatHistory(lmReply.content);
-        }
-        catch (err) {
-            addMsgToChatHistory(`[Error: failed to reach server]: ${err}`)
-        }
-
-        // we are going to ignore 
+        // call the agent_state endpoint 
         //try {
-        //    const sheet = await fetchWrapper(
-        //        "/sheet",
+        //    await fetchWrapper(
+        //        "/agent_state",
         //        "POST",
         //        {
-        //            "task_id": taskId,
-        //            "attachments": attachments
-        //        } 
+        //            "agent_messages" : [{"role": "user", "content": "Alice and Bob are going to a science fair on Friday."}],
+        //        }
         //    )
         //}
         //catch (err) {
-        //    addMsgToChatHistory(`[Error: Failed to create sheet]: ${err}`)
+        //    addMsgToChatHistory(`[Error: Failed to create a new agent_state]: ${err}`)
         //}
+
     };
 }
 

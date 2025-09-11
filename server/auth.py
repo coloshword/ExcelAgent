@@ -1,26 +1,22 @@
 ## auth.py
 from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import HTTPBasic, HTTPBasicCredentials 
-from passlib.context import CryptContext 
 from fastapi.security import OAuth2PasswordBearer
-from models import User, PublicUser
+from .models import User, PublicUser
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
 from psycopg2.pool import SimpleConnectionPool
-import db_ops
+from . import db_ops
 from dotenv import load_dotenv
 import os 
 from pydantic import BaseModel
-from deps import get_pool
+from .deps import get_pool
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
 SECRET_KEY = os.environ.get("secret_key")
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oath2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 token_exception = HTTPException (
         status_code=status.HTTP_401_UNAUTHORIZED,

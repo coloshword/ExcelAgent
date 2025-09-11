@@ -4,22 +4,22 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
-import auth
-from models import User, PublicUser, ChatMessage, FileData
+from . import auth
+from .models import User, PublicUser, ChatMessage, FileData, AgentState
 import googleapiclient.discovery
-import login_with_google
-from login_with_google import flow
+from . import login_with_google
+from .login_with_google import flow
 import googleapiclient.discovery
 from psycopg2.pool import SimpleConnectionPool
 from contextlib import asynccontextmanager
-from deps import get_pool, get_lm_api_client
+from .deps import get_pool, get_lm_api_client
 from openai import OpenAI
-import db_ops
+from . import db_ops
 import json
-import lm_ops
-import task
-import sheet
-import agent_functions
+from . import lm_ops
+from . import task
+from . import sheet
+from . import agent_functions
 from typing import List
 
 
@@ -105,7 +105,6 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
 def create_sheet(payload: CreateSheetRequest, user: User=Depends(auth.get_current_user), pool:SimpleConnectionPool=Depends(get_pool)):
     google_sub = user.google_sub
     task_id = payload.task_id
-    print(type(task_id))
     # for now just create one sheet with the first attachemnt 
     attachments = payload.attachments
     attachment:FileData = attachments[0]
@@ -119,19 +118,14 @@ def create_task(user: User=Depends(auth.get_current_user), pool:SimpleConnection
     google_sub = user.google_sub
     return task.create_task_in_db(pool, google_sub)
 
-
-@app.post("/chat") # add the current_user dependency to wall it off behind auth
-async def agent_request(user_msg: ChatMessage, client: OpenAI = Depends(get_lm_api_client), user: User = Depends(auth.get_current_user), pool:SimpleConnectionPool = Depends(get_pool)):
-    # example response 
-    df = agent_functions.convert_sheet_array_to_df(user_msg.sheet_content)
-    request = user_msg.text
-    #messages=[
-    #    {"role": "system", "content": "You are a helpful assistant."},
-    #    {
-    #        "role": "user",
-    #        "content": user_msg.text
-    #    }
-    #]
-    #model = "gemini-2.5-flash"
-    #return lm_ops.make_LM_request(client, model, messages)
-    return 'Making a LM request'
+## endpoint to create an agent state 
+@app.post("/agent_state", status_code=status.HTTP_201_CREATED)
+def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends(get_pool)):
+    '''
+    creates the agent state. An agent state takes in the current state of the sheet to create it 
+        agent_state: the agent state payload object
+        pool: the pool to take connections from 
+    '''
+    print(agent_state.agent_messages)
+    print(agent_state.sheet_status)
+    #db_ops.initialize_agent_state_in_db(pool, )

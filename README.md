@@ -293,3 +293,4 @@ this way our web component is encapsulated
 - we need to create an "lm_request" object for some level of persistence 
 
 - sql: JSONB type: stores json as binary format, binary preparsed format. Many python libraries can read these seamlessly
+- goal simply create the agent state on the first request...
