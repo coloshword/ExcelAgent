@@ -303,4 +303,4 @@ this way our web component is encapsulated
     - now we can work on hooking up to the endpoint 
     - frontend calls endpoint properly
 
-- make a
+### Sep 12.
