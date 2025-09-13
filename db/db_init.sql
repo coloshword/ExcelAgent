@@ -35,8 +35,9 @@ CREATE TABLE sheets (
 CREATE TABLE agent_state (
     agent_id BIGSERIAL PRIMARY KEY,
     agent_messages JSONB NOT NULL,
-    sheet_status JSONB NOT NULL
+    sheet_status text[][] NOT NULL
 );
+
 
 -- psql commands
 -- \list: shows all the dbs 

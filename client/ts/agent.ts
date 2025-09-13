@@ -1,4 +1,4 @@
-import { fetchWrapper, checkAuthStatus, redirectToLogin, setQueryParam } from "./utils.js"
+import { checkAuthStatus, redirectToLogin, setQueryParam } from "./utils.js"
 import { ChatWidget } from "./components/ChatWidget.js";
 import { GridWidget } from "./components/GridWidget.js";
 import type { FileData } from "./models.js";
@@ -32,42 +32,17 @@ function displayAuthenticatedResource(user: PublicUser) {
 function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: GridWidget) {
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
         const currentGridData = datagridWidget.getGridData()
-        // if there is no task id in the query param, we create a task 
-        const url = new URL(window.location.href);
-        const queryParamTaskId: string | null = url.searchParams.get("taskId");
-        let taskId: number|null = null;
-        if (queryParamTaskId == null) {
-            try {
-                taskId = await fetchWrapper(
-                    "/task",
-                    "POST",
-                    {}
-                )
-            }
-            catch (err) {
-                addMsgToChatHistory(`[Error: Failed to create a task]: ${err}`)
-            }
-        }
-        // set the query param
-        //create a sheet 
-        if (! taskId) {
-            return;
-        }
-
-        // call the agent_state endpoint 
-        //try {
-        //    await fetchWrapper(
-        //        "/agent_state",
-        //        "POST",
-        //        {
-        //            "agent_messages" : [{"role": "user", "content": "Alice and Bob are going to a science fair on Friday."}],
-        //        }
-        //    )
-        //}
-        //catch (err) {
-        //    addMsgToChatHistory(`[Error: Failed to create a new agent_state]: ${err}`)
-        //}
-
+        const endpoint = `${config['server_uri']}/agent_state`;
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                "agent_messages": [{"role": "user", "content": msg}],
+                "sheet_status": currentGridData
+            })
+        });
     };
 }
 

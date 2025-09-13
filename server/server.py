@@ -126,6 +126,5 @@ def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends
         agent_state: the agent state payload object
         pool: the pool to take connections from 
     '''
-    print(agent_state.agent_messages)
-    print(agent_state.sheet_status)
-    #db_ops.initialize_agent_state_in_db(pool, )
+    agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_state.agent_messages, agent_state.sheet_status)
+    return agent_state_id

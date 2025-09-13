@@ -294,3 +294,13 @@ this way our web component is encapsulated
 
 - sql: JSONB type: stores json as binary format, binary preparsed format. Many python libraries can read these seamlessly
 - goal simply create the agent state on the first request...
+
+- if app has a lifespan context manager, you can get around this for testing by using Testclient(app) as a context manager:
+    with TestClient(app) as client:
+
+- goal: create a agent_state object 
+    - we can create the agent_state object 
+    - now we can work on hooking up to the endpoint 
+    - frontend calls endpoint properly
+
+- make a

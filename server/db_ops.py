@@ -10,6 +10,7 @@ from datetime import datetime
 import base64
 from typing import List
 import pandas as pd 
+from psycopg2.extras import Json
 
 '''
 we should use SimpleConnectionPool, it's a process wide pool that contains
@@ -213,11 +214,18 @@ def initialize_agent_state_in_db(pool: SimpleConnectionPool, messages: List[dict
             messages: the initial state of the agent message history
             sheet_state: the dataframe representing the state of the sheet at request time
     '''
-    query = """
-    INSERT into agent_state (agent_messages, sheet_status)
-    VALUES (%s, %s)
-    returning agent_id
-    """
+    conn: psycopg2.extensions.connection
+    with pool.getconn() as conn, conn.cursor() as cur:
+        query = """
+        INSERT into agent_state (agent_messages, sheet_status)
+        VALUES (%s, %s)
+        returning agent_id
+        """
+        cur.execute(query, (Json(messages),sheet_state))
+        conn.commit()
+        id = cur.fetchone()[0]
+        return id
+
 
 if __name__ == "__main__":
     pool = init_pool(1, 10)
