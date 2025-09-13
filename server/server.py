@@ -20,6 +20,7 @@ from . import lm_ops
 from . import sheet
 from . import agent_functions
 from typing import List
+from . import worker 
 
 
 class AddChat(BaseModel):
@@ -95,13 +96,8 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
         service = googleapiclient.discovery.build('oauth2', 'v2', credentials=credentials)
         user_info = service.userinfo().get().execute() # the user_info 
         redirect_url = f"{config['client_uri']}/agent.html"
-        print(redirect_url)
-        print("here")
         response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
-        print("calling jwt")
         jwt = auth.handle_create_user_or_login(user_info, pool)
-        print("jwt token")
-        print(jwt)
         response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")
         return response
     except Exception as e:
@@ -116,6 +112,9 @@ def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends
         pool: the pool to take connections from 
     '''
     agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_state.agent_messages, agent_state.sheet_status)
+    # initialize the worker task 
+    task = worker.make_lm_request.delay()
     return {
-        "agent_state_id": agent_state_id
+        "agent_state_id": agent_state_id,
+        "task_id": task.id
     }

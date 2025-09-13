@@ -10,10 +10,6 @@ interface PublicUser {
 
 type AddMsg = (text: string) => void;
 
-interface CreateAgentStateResult { 
-    agent_state_id: string
-}
-
 
 /**
  * function to display the authenticatedResource
@@ -49,6 +45,7 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
                 })
             });
             const content = await response.json();
+            console.log(content);
             // set the query parameter to be the value of content 
             setQueryParam("state", content.agent_state_id)
         } catch (error) {
