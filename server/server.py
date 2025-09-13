@@ -17,7 +17,6 @@ from openai import OpenAI
 from . import db_ops
 import json
 from . import lm_ops
-from . import task
 from . import sheet
 from . import agent_functions
 from typing import List
@@ -57,6 +56,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+def hello_world():
+    return "Hello world"
+
 # endpoint that requires jwt token 
 @app.get("/users/me", response_model=PublicUser)
 async def read_users_me(current_user: User = Depends(auth.get_current_user)):
@@ -93,30 +96,16 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
         user_info = service.userinfo().get().execute() # the user_info 
         redirect_url = f"{config['client_uri']}/agent.html"
         print(redirect_url)
+        print("here")
         response = RedirectResponse(redirect_url, status_code=status.HTTP_303_SEE_OTHER)
+        print("calling jwt")
         jwt = auth.handle_create_user_or_login(user_info, pool)
+        print("jwt token")
+        print(jwt)
         response.set_cookie(key="access_token", value=jwt, httponly=True, samesite="lax", secure=False, path="/")
         return response
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
-
-# create a sheet endpoint 
-@app.post("/sheet")
-def create_sheet(payload: CreateSheetRequest, user: User=Depends(auth.get_current_user), pool:SimpleConnectionPool=Depends(get_pool)):
-    google_sub = user.google_sub
-    task_id = payload.task_id
-    # for now just create one sheet with the first attachemnt 
-    attachments = payload.attachments
-    attachment:FileData = attachments[0]
-    filename: str = attachment.filename
-    b64: str = attachment.fileContent
-    sheet.create_sheet_in_db(pool, google_sub, task_id, filename, b64)
-
-# create a task endpoint
-@app.post("/task")
-def create_task(user: User=Depends(auth.get_current_user), pool:SimpleConnectionPool=Depends(get_pool)):
-    google_sub = user.google_sub
-    return task.create_task_in_db(pool, google_sub)
 
 ## endpoint to create an agent state 
 @app.post("/agent_state", status_code=status.HTTP_201_CREATED)
@@ -127,4 +116,6 @@ def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends
         pool: the pool to take connections from 
     '''
     agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_state.agent_messages, agent_state.sheet_status)
-    return agent_state_id
+    return {
+        "agent_state_id": agent_state_id
+    }

@@ -15,8 +15,8 @@ from .deps import get_pool
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
-load_dotenv(os.path.join(os.path.dirname(__file__), "../.env"))
-SECRET_KEY = os.environ.get("secret_key")
+load_dotenv()
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 token_exception = HTTPException (
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -44,6 +44,7 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         Params:
             data: the dictionary to encode in jwt token (the payload)
     """
+    print("create access token")
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta # use timezone.utc for now() so all times are timezone aware (so changing timezones) doesn't affect the expiration time  
@@ -51,7 +52,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         expire = datetime.now(timezone.utc) + timedelta(minutes=15) # default set to 15 minutes 
     
     to_encode.update({"exp": expire})
+    print("before jwt.encode") 
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    print(f"encode jwt {encoded_jwt}")
     return encoded_jwt
 
 def get_token_from_cookie(request: Request):
@@ -110,6 +113,7 @@ def handle_create_user_or_login(google_user_info: dict, pool: SimpleConnectionPo
             jwt: the jwt of the newly logged in user 
     '''
     # see if user is in the db
+    print(f"google user info: {google_user_info}")
     google_sub = google_user_info['id']
     if not db_ops.is_user_in_db(pool, google_sub):
         db_ops.create_user(pool, google_user_info)

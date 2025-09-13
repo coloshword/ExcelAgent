@@ -12,35 +12,35 @@ from typing import List
 import pandas as pd 
 from psycopg2.extras import Json
 
-'''
-we should use SimpleConnectionPool, it's a process wide pool that contains
-a set of database connections (con and cursor), so we don't need to 
-create a new one per request
-'''
-def init_pool(min_connections: int, max_connections:int) -> SimpleConnectionPool:
-    '''
-    initiates a SimpleConnectionPool with min_connections, and max_connections
-        Params:
-            min_connections:
-    '''
+
+def _need(k: str) -> str:
+    v = os.getenv(k)
+    if not v:
+        raise RuntimeError(f"Missing environment variable: {k}")
+    return v
+
+def init_pool(min_connections: int, max_connections: int) -> SimpleConnectionPool:
+    # Loads .env if present (no-op in your container). Env vars from `docker run -e` still work.
     load_dotenv()
-    DB_config = {
-        "db_name": os.getenv("db_name"),
-        "user": os.getenv("user"),
-        "host": os.getenv("host"),
-        "port": os.getenv("port"),
-        "password": os.getenv("password")
-    }
-    pool = SimpleConnectionPool(
-        minconn= min_connections,
+
+    dbname   = _need("DB_NAME")
+    user     = _need("DB_USER")
+    password = _need("DB_PASSWORD")
+    host     = _need("DB_HOST")           # e.g. host.docker.internal (on Mac)
+    port     = int(_need("DB_PORT"))      # cast to int for clarity
+
+    print(f"Connecting to {user}@{host}:{port}/{dbname}")  # debug; remove later
+
+    return SimpleConnectionPool(
+        minconn=min_connections,
         maxconn=max_connections,
-        dbname=DB_config["db_name"],
-        user=DB_config["user"],
-        password=DB_config["password"],
-        host=DB_config["host"],
-        port=DB_config["port"]
+        dbname=dbname,
+        user=user,
+        password=password,
+        host=host,
+        port=port,
+        connect_timeout=5,
     )
-    return pool
 
 def build_insert_query_from_dict(d:dict, table:str, id_field_name:str) -> str:
     '''

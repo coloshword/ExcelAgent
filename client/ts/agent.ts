@@ -10,6 +10,10 @@ interface PublicUser {
 
 type AddMsg = (text: string) => void;
 
+interface CreateAgentStateResult { 
+    agent_state_id: string
+}
+
 
 /**
  * function to display the authenticatedResource
@@ -33,18 +37,27 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
         const currentGridData = datagridWidget.getGridData()
         const endpoint = `${config['server_uri']}/agent_state`;
-        const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                "agent_messages": [{"role": "user", "content": msg}],
-                "sheet_status": currentGridData
-            })
-        });
+        try {
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "agent_messages": [{"role": "user", "content": msg}],
+                    "sheet_status": currentGridData
+                })
+            });
+            const content = await response.json();
+            // set the query parameter to be the value of content 
+            setQueryParam("state", content.agent_state_id)
+        } catch (error) {
+            console.log(error);
+        }
+
     };
 }
+
 
 function addChatWidget(dataGridObj: GridWidget) {
     const chatWidgetCont = document.querySelector(".chat-widget-cont") as HTMLDivElement;

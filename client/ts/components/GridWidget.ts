@@ -1,5 +1,6 @@
-import canvasDatagrid from 'canvas-datagrid';
-import type {CanvasDataGrid}  from 'canvas-datagrid';
+import canvasDatagrid from "canvas-datagrid";
+type CanvasDataGrid = ReturnType<typeof canvasDatagrid>;
+
 
 export class GridWidget {
     private parent: HTMLDivElement;
