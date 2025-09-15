@@ -45,5 +45,10 @@ class ChatMessage(BaseModel):
     sheet_content: List[List[str]]
 
 class AgentState(BaseModel):
-    agent_messages: List[dict]
+    user_msg: str
     sheet_status: List[List[str]]
+
+class TaskResultOut(BaseModel):
+    task_id: str
+    task_status: str 
+    task_result: str | None

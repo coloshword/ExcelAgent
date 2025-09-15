@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 from . import auth
-from .models import User, PublicUser, ChatMessage, FileData, AgentState
+from .models import User, PublicUser, ChatMessage, FileData, AgentState, TaskResultOut
 import googleapiclient.discovery
 from . import login_with_google
 from .login_with_google import flow
@@ -21,6 +21,7 @@ from . import sheet
 from . import agent_functions
 from typing import List
 from . import worker 
+from celery.result import AsyncResult
 
 
 class AddChat(BaseModel):
@@ -108,13 +109,35 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
 def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends(get_pool)):
     '''
     creates the agent state. An agent state takes in the current state of the sheet to create it 
-        agent_state: the agent state payload object
-        pool: the pool to take connections from 
+        Params:
+            agent_state: the agent state payload object
+            pool: the pool to take connections from 
     '''
-    agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_state.agent_messages, agent_state.sheet_status)
     # initialize the worker task 
-    task = worker.make_lm_request.delay()
+    # include the message history 
+    # initialize one if not made 
+    agent_message_history = agent_functions.init_agent_message_history(agent_state.user_msg) 
+    agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_message_history, agent_state.sheet_status)
+    task = worker.make_lm_request.delay(agent_message_history)
     return {
         "agent_state_id": agent_state_id,
         "task_id": task.id
     }
+
+@app.get("/tasks/{task_id}", response_model=TaskResultOut)
+def get_task_status(task_id: str):
+    '''
+    gets the task_status of the celery worker (agent flow)
+        Params:
+            task_id: the task id
+    '''
+    task_result = worker.get_async_result(task_id)
+    print(task_result)
+    print(task_result.status)
+    print(task_result.result)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result
+    }
+    return result 

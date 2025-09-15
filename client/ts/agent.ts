@@ -8,8 +8,13 @@ interface PublicUser {
     email: string
 }
 
-type AddMsg = (text: string) => void;
+interface TaskResult {
+    task_id: string
+    task_status: string 
+    task_result: string
+}
 
+type AddMsg = (text: string) => void;
 
 /**
  * function to display the authenticatedResource
@@ -24,6 +29,48 @@ function displayAuthenticatedResource(user: PublicUser) {
     usernameDisplay.innerText = user.email;
 }
 
+/**
+ * Function updates the task result when finished in the backend 
+ * 
+ */
+function updateTaskResult(resultResponse: TaskResult, addMsgToChatHistory: AddMsg) {
+    if (resultResponse.task_result) {
+        addMsgToChatHistory(resultResponse.task_result)
+    }
+}
+
+/**
+ * Reapeatedly polls the /tasks/ endpoint for the result of the agent task (celery job)
+ * @param taskID 
+ * @param addMsgToChatHistory: callback function that allows you to add a message to the client chat history. 
+ * To be used by the update function post task status is no longer pending
+ */
+async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg) {
+    let intervalID: number | null = null;
+    async function pollTaskStatusOnce(taskID: string) {
+        const endpoint = `${config['server_uri']}/tasks/${taskID}`
+        try {
+            const response = await fetch(endpoint, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+            })
+            const content = await response.json()
+            if (content.task_status != 'PENDING' && intervalID != null) {
+                // clear the interval since its done 
+                clearInterval(intervalID)
+                updateTaskResult(content, addMsgToChatHistory)
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
+    // set interval to 
+    const pollingFrequency = 1000; // poll every second 
+    intervalID = setInterval(pollTaskStatusOnce, pollingFrequency, taskID)
+}
 
 /**
  * Factory to create callbacks for chatWidget
@@ -40,21 +87,23 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    "agent_messages": [{"role": "user", "content": msg}],
+                    "user_msg": msg,
                     "sheet_status": currentGridData
                 })
             });
             const content = await response.json();
-            console.log(content);
             // set the query parameter to be the value of content 
             setQueryParam("state", content.agent_state_id)
+            // this creates a taskID
+            const taskID: string = content.task_id;
+            // wait until task_status is finished...
+            const taskResult = await pollTaskStatus(taskID, addMsgToChatHistory);
         } catch (error) {
             console.log(error);
         }
 
     };
 }
-
 
 function addChatWidget(dataGridObj: GridWidget) {
     const chatWidgetCont = document.querySelector(".chat-widget-cont") as HTMLDivElement;
