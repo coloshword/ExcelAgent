@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 from . import auth
-from .models import User, PublicUser, ChatMessage, FileData, AgentState, TaskResultOut
+from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut
 import googleapiclient.discovery
 from . import login_with_google
 from .login_with_google import flow
@@ -18,7 +18,7 @@ from . import db_ops
 import json
 from . import lm_ops
 from . import sheet
-from . import agent_functions
+from . import agent_helpers
 from typing import List
 from . import worker 
 from celery.result import AsyncResult
@@ -105,8 +105,8 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
         raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
 
 ## endpoint to create an agent state 
-@app.post("/agent_state", status_code=status.HTTP_201_CREATED)
-def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends(get_pool)):
+@app.post("/agent_request", status_code=status.HTTP_201_CREATED)
+def create_agent_state(agent_state:AgentRequest, pool:SimpleConnectionPool=Depends(get_pool)):
     '''
     creates the agent state. An agent state takes in the current state of the sheet to create it 
         Params:
@@ -116,7 +116,8 @@ def create_agent_state(agent_state:AgentState, pool:SimpleConnectionPool=Depends
     # initialize the worker task 
     # include the message history 
     # initialize one if not made 
-    agent_message_history = agent_functions.init_agent_message_history(agent_state.user_msg) 
+    agent_message_history = agent_helpers.init_agent_message_history(agent_state.user_msg) 
+    print(agent_state.sheet_status)
     agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_message_history, agent_state.sheet_status)
     task = worker.make_lm_request.delay(agent_message_history)
     return {
@@ -132,9 +133,6 @@ def get_task_status(task_id: str):
             task_id: the task id
     '''
     task_result = worker.get_async_result(task_id)
-    print(task_result)
-    print(task_result.status)
-    print(task_result.result)
     result = {
         "task_id": task_id,
         "task_status": task_result.status,

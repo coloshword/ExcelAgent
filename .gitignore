@@ -7,3 +7,4 @@ client/dist/
 **/*.d.ts
 google_auth.json
 client/node_modules
+custom_pytest.ini

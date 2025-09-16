@@ -44,7 +44,7 @@ class ChatMessage(BaseModel):
     text: str
     sheet_content: List[List[str]]
 
-class AgentState(BaseModel):
+class AgentRequest(BaseModel):
     user_msg: str
     sheet_status: List[List[str]]
 

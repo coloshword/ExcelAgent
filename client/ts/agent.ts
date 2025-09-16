@@ -79,7 +79,7 @@ async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg) {
 function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: GridWidget) {
     return async function chatWidgetCallback(msg: string, attachments: FileData[]) {
         const currentGridData = datagridWidget.getGridData()
-        const endpoint = `${config['server_uri']}/agent_state`;
+        const endpoint = `${config['server_uri']}/agent_request`;
         try {
             const response = await fetch(endpoint, {
                 method: "POST",

@@ -30,4 +30,3 @@ def get_async_result(id):
     wrapper to get the AsyncResult object from celery instance 
     '''
     return celery.AsyncResult(id)
-    

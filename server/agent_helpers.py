@@ -1,6 +1,10 @@
 ### functions for agentic purpose
 from typing import List
 import pandas as pd 
+import requests 
+import time 
+from openai import OpenAI
+import os 
 
 def convert_sheet_array_to_df(grid: List[List[str]]):
     '''
@@ -32,5 +36,19 @@ def init_agent_message_history(first_user_msg: str):
     ]
     return messages
 
-if __name__ == "__main__":
-    pass
+def make_lm_request(agent_message_history: List[dict]):
+    '''
+    makes a request to the LLLM based on the current agent_message_history
+        Params:
+            agent_message_history: the agent message history in OpenAI API completions format
+    '''
+    client = OpenAI(
+        api_key=os.environ.get("GEMINI_API_KEY"),
+        base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+    )
+
+    response = client.chat.completions.create(
+        model="gemini-2.5-flash",
+        messages = agent_message_history
+    )
+    return dict(response.choices[0].message)
