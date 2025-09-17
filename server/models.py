@@ -48,7 +48,10 @@ class AgentRequest(BaseModel):
     user_msg: str
     sheet_status: List[List[str]]
 
+class AgentLoopOut(BaseModel):
+    sheet_status: List[List[str]]
+
 class TaskResultOut(BaseModel):
     task_id: str
     task_status: str 
-    task_result: str | None
+    task_result: AgentLoopOut | None

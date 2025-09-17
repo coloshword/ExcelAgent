@@ -1,16 +1,19 @@
 import time
 import requests
 from typing import List, Tuple 
+from .models import AgentLoopOut
 import json
 from google.genai import types, Client
 import os 
 import pandas as pd
+from . import agent_helpers
+
 ## agent.py: defines the module that defines the agent behavior. It is important that all these functions are called 
 # from celery
 
 client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-with open("./agent_config.json") as file:
+with open("./server/agent_config.json") as file:
     agent_config = json.load(file)
 
 def init_agent_message_history(user_request: str) -> List[types.Content]:
@@ -29,7 +32,7 @@ def init_agent_message_history(user_request: str) -> List[types.Content]:
     ]
     return contents
      
-def agent_loop(user_msg: str, sheet_status: List[List[str]]):
+def agent_loop(user_msg: str, sheet_status: List[List[str]]) -> dict:
     '''
     defines the main agentic loop
     agent loop: takes in agent_state_message_history: the current message history, in OpenAI api form
@@ -45,15 +48,12 @@ def agent_loop(user_msg: str, sheet_status: List[List[str]]):
     while not task_done:
         # call LM agent 
         if next_step == 'Reason':
-            task_done, agent_state_msg_history = agent_reason(agent_state_msg_history, sheet_status)
+            task_done, agent_state_msg_history, sheet_status = agent_reason(agent_state_msg_history, sheet_status)
             next_step = 'Act'
         else:
-            task_done = agent_act(agent_state_msg_history, sheet_status)
+            task_done, agent_state_msg_history, sheet_status = agent_act(agent_state_msg_history, sheet_status)
             next_step = 'Reason'
-    return { 
-        "agent_state_msg_history": agent_state_msg_history,
-        "sheet_status": sheet_status
-    }
+    return {"sheet_status": sheet_status}
 
 
 def agent_reason(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]) -> Tuple[bool, List[types.Content]]:
@@ -82,7 +82,7 @@ def agent_reason(agent_state_msg_history: List[types.Content], sheet_status: Lis
         raise Exception("None returned for reasoning step")
     print("agent_reason called") 
     agent_state_msg_history.append(response.candidates[0].content)
-    return False, agent_state_msg_history
+    return False, agent_state_msg_history, sheet_status
 
 
 def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]) -> Tuple[bool, List[types.Content]]:
@@ -109,8 +109,15 @@ def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[L
     )
     tool_call = response.candidates[0].content.parts[0].function_call
     print(tool_call)
+    ## actually call the tool
+    if tool_call.name == "execute_code":
+        # add the sheet_status to the df 
+        df = agent_helpers.convert_sheet_array_to_df(sheet_status)
+        tool_call.args['df'] = df 
+        result: pd.DataFrame = execute_code(**tool_call.args) # this is the resulting dataframe 
+    sheet_status = agent_helpers.convert_df_to_sheet_array(result)
     agent_state_msg_history.append(response.candidates[0].content)
-    return True, agent_state_msg_history
+    return True, agent_state_msg_history, sheet_status
 
 ## The section below defines specific tools 
 
@@ -148,6 +155,11 @@ def execute_code(code: str, df: pd.DataFrame):
         Params:
             code: the code to execute as a string 
     '''
+    variables = {
+        'df': df
+    }
+    exec(code, globals(), variables)
+    return variables['df']
 
 if __name__ == "__main__":
     ## first thing would be to make a new agent state 

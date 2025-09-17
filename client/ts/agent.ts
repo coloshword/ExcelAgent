@@ -11,7 +11,7 @@ interface PublicUser {
 interface TaskResult {
     task_id: string
     task_status: string 
-    task_result: string
+    task_result: string[][]
 }
 
 type AddMsg = (text: string) => void;
@@ -33,10 +33,12 @@ function displayAuthenticatedResource(user: PublicUser) {
  * Function updates the task result when finished in the backend 
  * 
  */
-function updateTaskResult(resultResponse: TaskResult, addMsgToChatHistory: AddMsg) {
+function updateTaskResult(resultResponse: TaskResult, addMsgToChatHistory: AddMsg, gridWidget: GridWidget) {
     if (resultResponse.task_result) {
-        addMsgToChatHistory(resultResponse.task_result)
+        addMsgToChatHistory('Request completed')
     }
+    // update the sate of the grid Widget
+    gridWidget.updateGridState(resultResponse.task_result);
 }
 
 /**
@@ -45,7 +47,7 @@ function updateTaskResult(resultResponse: TaskResult, addMsgToChatHistory: AddMs
  * @param addMsgToChatHistory: callback function that allows you to add a message to the client chat history. 
  * To be used by the update function post task status is no longer pending
  */
-async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg) {
+async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg, gridWidget: GridWidget) {
     let intervalID: number | null = null;
     async function pollTaskStatusOnce(taskID: string) {
         const endpoint = `${config['server_uri']}/tasks/${taskID}`
@@ -59,8 +61,8 @@ async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg) {
             const content = await response.json()
             if (content.task_status != 'PENDING' && intervalID != null) {
                 // clear the interval since its done 
-                clearInterval(intervalID)
-                updateTaskResult(content, addMsgToChatHistory)
+                clearInterval(intervalID);
+                updateTaskResult(content, addMsgToChatHistory, gridWidget)
             }
         } catch (error) {
             console.log(error);
@@ -68,7 +70,7 @@ async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg) {
     }
 
     // set interval to 
-    const pollingFrequency = 1000; // poll every second 
+    const pollingFrequency = 3000; // poll every 3 seconds
     intervalID = setInterval(pollTaskStatusOnce, pollingFrequency, taskID)
 }
 
@@ -97,7 +99,7 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
             // this creates a taskID
             const taskID: string = content.task_id;
             // wait until task_status is finished...
-            const taskResult = await pollTaskStatus(taskID, addMsgToChatHistory);
+            const taskResult = await pollTaskStatus(taskID, addMsgToChatHistory, datagridWidget);
         } catch (error) {
             console.log(error);
         }

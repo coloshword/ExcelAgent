@@ -180,3 +180,4 @@ React --> Reason (think about the tool you need) --> Act (call the tool)
         = 4 
     
     - call agent_reason and agent_act from celery
+        - working from celery worker

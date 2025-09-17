@@ -53,6 +53,13 @@ export class GridWidget {
         this.grid!.data = this.data;
     }
 
+    public updateGridState(gridState: string[][]) {
+        console.log(gridState)
+        this.data = gridState;
+        console.log(gridState);
+        this.grid!.data = this.data;
+    }
+
     private setup() {
         this.toDOM();
     }

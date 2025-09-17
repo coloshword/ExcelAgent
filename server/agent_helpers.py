@@ -19,6 +19,17 @@ def convert_sheet_array_to_df(grid: List[List[str]]):
     df = pd.DataFrame(grid, columns=column_names)
     return df
 
+def convert_df_to_sheet_array(df: pd.DataFrame):
+    '''
+    converts the df back into the 2d grid array
+        Params:
+            df: the pd.DataFrame represeenting the sheet
+        Returns:
+            sheet_array: the equivalent 2d sheet array
+    '''
+    sheet = [list(row[1:]) for row in df.itertuples()]
+    return sheet
+
 def init_agent_message_history(first_user_msg: str):
     '''
     initiates the agent message history, for the first user message, following OpenAI Chat Completions API

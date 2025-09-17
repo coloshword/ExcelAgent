@@ -2,7 +2,7 @@ import os
 from celery import Celery
 from openai import OpenAI
 from typing import List 
-import agent 
+from . import agent 
 
 celery = Celery(__name__)
 celery.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://redis:6379/0")
@@ -34,7 +34,8 @@ def make_agent_request(user_request: str, sheet_status:List[List[str]]):
             user_request: the user request 
             sheet_status: the current status of the sheet 
     '''
-    agent.agent_loop(user_request, sheet_status)
+    result = agent.agent_loop(user_request, sheet_status)
+    return result
 
 def get_async_result(id):
     '''
