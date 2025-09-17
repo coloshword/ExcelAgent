@@ -1,55 +1,29 @@
 ### test_agent: tests the agent 
 from google import genai
 from google.genai import types 
-from server.agent import view_spreadsheet_declaration, execute_code_declaration, view_spreadsheet, execute_code
+from server.agent import view_spreadsheet_declaration, execute_code_declaration, view_spreadsheet, execute_code, init_agent_message_history, agent_reason, agent_act
 import json
 import os 
 from typing import List 
 
 def test_agent_reason():
     input_grid = [['' for x in range(24)] for y in range(40)]
-    user_request = "In the first column of the spreadsheet, include the 20 countries with the highest population"
-    with open("./server/agent_config.json") as file:
-        agent_config = json.load(file)
-
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"])
-
-    contents = [
-        types.Content(
-            role="user", 
-            parts=[types.Part(text=f"USER REQUEST: {user_request} | INSTRUCTIONS: {agent_config["agent_reason_prompt"]}")]
-        ),
-    ]
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=contents,
-        config=config
-    )
-    # add response to the agent_history
-    contents.append(response.candidates[0].content)
-    return contents 
-
+    user_request = "can you add the top 20 countries into the first column of the sheet"
+    agent_msg_history = init_agent_message_history(user_request)
+    # test agent_reason
+    task_done, agent_state_msg_history = agent_reason(agent_msg_history, input_grid)
+    assert len(agent_state_msg_history) == 2
+    assert isinstance(agent_state_msg_history, list)
+    assert isinstance(agent_state_msg_history[0], types.Content)
 
 def test_agent_act():
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    contents = test_agent_reason()
-    user_request = "In the first column of the spreadsheet, include the 20 countries with the highest population"
-    with open("./server/agent_config.json") as file:
-        agent_config = json.load(file)
-    act_content = types.Content(
-        role="user",
-        parts=[types.Part(text=f"USER REQUEST: {user_request} |INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
-
-    )
-    tools = types.Tool(function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
-    config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])
-    contents.append(act_content)
-    print(contents)
-
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=contents,
-        config=config
-    )
-    print(response)
+    input_grid = [['' for x in range(24)] for y in range(40)]
+    # first step is reasoning step 
+    user_request = "Can you add the top 20 countries into the first column of the sheet"
+    agent_msg_history = init_agent_message_history(user_request)
+    task_done, agent_state_msg_history = agent_reason(agent_msg_history, input_grid)
+    # call the agent_reason 
+    task_done, agent_state_msg_history = agent_act(agent_state_msg_history, input_grid)
+    assert len(agent_state_msg_history) == 4
+    assert isinstance(agent_state_msg_history, list)
+    assert isinstance(agent_state_msg_history[0], types.Content)

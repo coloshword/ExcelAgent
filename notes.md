@@ -8,6 +8,7 @@
 -- job apps 
     - 10x a day
 
+### python -m pytest -c custom_pytest.ini
 ### 09/13/25
 - stores agent_state in db
 - store agent_state_id from db value 
@@ -156,5 +157,26 @@ React --> Reason (think about the tool you need) --> Act (call the tool)
 
 
 - it's going to generate a bunch of tokens, even function call during the reasoning stage. We won't let it reason, until we have it act
+    
+    **TODO**: If the first step is always agent reason, how do we do init_agent_message_history, and how does taht differ from the agent_reason step?
 
-### python -m pytest -c custom_pytest.ini
+### 09/16/25
+- start of the agent loop (reasoning step --> action step)
+    - tool calling using google.genai
+    - structure of the tools & what they do
+    - 1 (reason -> act) cycle loop 
+
+    - implement the tools 
+    - call the agent loop & have it update the client state 
+
+    - should it be 3 or 4 
+    
+    agent_reason():
+        - user request + 1st reasoning step
+        - LM response 
+        - 1st act step instructions 
+        - LM act response 
+
+        = 4 
+    
+    - call agent_reason and agent_act from celery

@@ -1,19 +1,35 @@
 import time
 import requests
-from typing import List 
+from typing import List, Tuple 
 import json
-from . import agent_helpers
-from google import genai
+from google.genai import types, Client
 import os 
+import pandas as pd
 ## agent.py: defines the module that defines the agent behavior. It is important that all these functions are called 
 # from celery
 
-client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
 
-with open("./server/agent_config.json") as file:
+with open("./agent_config.json") as file:
     agent_config = json.load(file)
 
-def agent_loop(agent_state_msg_history: List[dict], sheet_status: List[List[str]]):
+def init_agent_message_history(user_request: str) -> List[types.Content]:
+    '''
+    initiates the message history of the agent, from the first message, the user request. Note: the reasoning step is appeneded to this first message to trigger the first part of the agent_lop
+        Params:
+            user_request: the user request 
+        Returns:
+            agent_message_history in the form of a list of genai.types.Content
+    '''
+    contents = [
+        types.Content(
+            role="user", 
+            parts=[types.Part(text=f"USER REQUEST: {user_request} | INSTRUCTIONS: {agent_config["agent_reason_prompt"]}")]
+        ),
+    ]
+    return contents
+     
+def agent_loop(user_msg: str, sheet_status: List[List[str]]):
     '''
     defines the main agentic loop
     agent loop: takes in agent_state_message_history: the current message history, in OpenAI api form
@@ -24,37 +40,77 @@ def agent_loop(agent_state_msg_history: List[dict], sheet_status: List[List[str]
     '''
     task_done = False 
     next_step = 'Reason' # we update this to determine if we want to reason or if we want to act
+    ## create the agent_message_history
+    agent_state_msg_history = init_agent_message_history(user_msg)
     while not task_done:
         # call LM agent 
         if next_step == 'Reason':
-            task_done = agent_reason(agent_state_msg_history, sheet_status)
+            task_done, agent_state_msg_history = agent_reason(agent_state_msg_history, sheet_status)
             next_step = 'Act'
         else:
             task_done = agent_act(agent_state_msg_history, sheet_status)
             next_step = 'Reason'
-            task_done = True
     return { 
         "agent_state_msg_history": agent_state_msg_history,
         "sheet_status": sheet_status
     }
 
-def agent_reason(agent_state_msg_history: List[dict], sheet_status: List[List[str]]):
-    '''
-    Executes one step of reasoning. Note: modifies agent_state_msg_history in-place
-        Params:
-            - agent_state_msg_history: the current agent message history
-            - sheet_status: the current_status of the sheet 
-    '''
-    
 
-def agent_act(agent_state_msg_history: List[dict], sheet_status: List[List[str]]):
+def agent_reason(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]) -> Tuple[bool, List[types.Content]]:
     '''
     Executes one step of reasoning. Note: modifies agent_state_msg_history in-place
         Params:
             - agent_state_msg_history: the current agent message history
             - sheet_status: the current_status of the sheet 
     '''
-    pass 
+    # the first call is already reasoning  
+    client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    tools = types.Tool(function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
+    config = types.GenerateContentConfig(
+        system_instruction=agent_config["agent_system_prompt"], 
+        tools=[tools], 
+        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
+    )
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=agent_state_msg_history,
+        config=config
+    )
+    # add response to the agent_history
+    if response.candidates == None or response.candidates[0].content == None:
+        print(response)
+        raise Exception("None returned for reasoning step")
+    print("agent_reason called") 
+    agent_state_msg_history.append(response.candidates[0].content)
+    return False, agent_state_msg_history
+
+
+def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]) -> Tuple[bool, List[types.Content]]:
+    '''
+    Executes one step of reasoning. Note: modifies agent_state_msg_history in-place
+        Params:
+            - agent_state_msg_history: the current agent message history
+            - sheet_status: the current_status of the sheet 
+    '''
+    print("agent_act called")
+    client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    user_request = "In the first column of the spreadsheet, include the 20 countries with the highest population"
+    act_content = types.Content(
+        role="user",
+        parts=[types.Part(text=f"USER REQUEST: {user_request} |INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
+    )
+    tools = types.Tool(function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
+    config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])
+    agent_state_msg_history.append(act_content)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=agent_state_msg_history,
+        config=config
+    )
+    tool_call = response.candidates[0].content.parts[0].function_call
+    print(tool_call)
+    agent_state_msg_history.append(response.candidates[0].content)
+    return True, agent_state_msg_history
 
 ## The section below defines specific tools 
 
@@ -86,8 +142,12 @@ execute_code_declaration = {
     }
 }
 
-def execute_code(code: str):
-    print("You are executing code ")
+def execute_code(code: str, df: pd.DataFrame):
+    '''
+    Function to execute code 
+        Params:
+            code: the code to execute as a string 
+    '''
 
 if __name__ == "__main__":
     ## first thing would be to make a new agent state 
