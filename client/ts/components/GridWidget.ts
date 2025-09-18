@@ -54,10 +54,7 @@ export class GridWidget {
     }
 
     public updateGridState(gridState: string[][]) {
-        console.log(gridState)
-        this.data = gridState;
-        console.log(gridState);
-        this.grid!.data = this.data;
+        this.grid!.data = gridState;
     }
 
     private setup() {

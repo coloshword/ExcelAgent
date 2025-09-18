@@ -94,10 +94,9 @@ def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[L
     '''
     print("agent_act called")
     client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    user_request = "In the first column of the spreadsheet, include the 20 countries with the highest population"
     act_content = types.Content(
         role="user",
-        parts=[types.Part(text=f"USER REQUEST: {user_request} |INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
+        parts=[types.Part(text=f"INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
     )
     tools = types.Tool(function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
     config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])

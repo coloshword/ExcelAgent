@@ -117,7 +117,6 @@ def create_agent_state(agent_state:AgentRequest, pool:SimpleConnectionPool=Depen
     # include the message history 
     # initialize one if not made 
     agent_message_history = agent_helpers.init_agent_message_history(agent_state.user_msg) 
-    print(agent_state.sheet_status)
     agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_message_history, agent_state.sheet_status)
     task = worker.make_agent_request.delay(agent_state.user_msg, agent_state.sheet_status)
     return {

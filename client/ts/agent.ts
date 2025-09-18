@@ -11,7 +11,11 @@ interface PublicUser {
 interface TaskResult {
     task_id: string
     task_status: string 
-    task_result: string[][]
+    task_result: TaskResultSheetObject
+}
+
+interface TaskResultSheetObject {
+    sheet_status: string[][]
 }
 
 type AddMsg = (text: string) => void;
@@ -38,7 +42,8 @@ function updateTaskResult(resultResponse: TaskResult, addMsgToChatHistory: AddMs
         addMsgToChatHistory('Request completed')
     }
     // update the sate of the grid Widget
-    gridWidget.updateGridState(resultResponse.task_result);
+    //gridWidget.updateGridState(resultResponse.task_result);
+    gridWidget.updateGridState(resultResponse.task_result.sheet_status);
 }
 
 /**
