@@ -181,3 +181,35 @@ React --> Reason (think about the tool you need) --> Act (call the tool)
     
     - call agent_reason and agent_act from celery
         - working from celery worker
+
+
+### project todos 
+1) make the spreadsheet more "spreadsheet" like (auto expanding rows, etc...)
+
+2) some sort of way to allow for search? the agent should be able to search things up
+
+3) Spreadsheet functions (closer to excel)
+
+4) create "history" --> you should be able to see the agent_state and also select from previous sheets
+
+5) ci/cd?
+
+6) add benchmarking?
+
+7) retry mechanism to allow agent to fix its errors 
+
+
+current:
+2) some sort of way to allow for search? the agent should be able to search things up
+
+
+### 09/18/25:
+- add agent internet search feature 
+
+
+### agent loop rewrite 
+
+def agent_loop():
+- defines the main agent loop
+- think --> act loop
+- when done? --> flag as done, tool to update the state to done = True? with a 6 step limit 

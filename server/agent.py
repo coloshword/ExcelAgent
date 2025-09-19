@@ -65,7 +65,8 @@ def agent_reason(agent_state_msg_history: List[types.Content], sheet_status: Lis
     '''
     # the first call is already reasoning  
     client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    tools = types.Tool(function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
+    # add  grounding ? 
+    tools = types.Tool(google_search=types.GoogleSearch, function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
     config = types.GenerateContentConfig(
         system_instruction=agent_config["agent_system_prompt"], 
         tools=[tools], 
@@ -92,13 +93,12 @@ def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[L
             - agent_state_msg_history: the current agent message history
             - sheet_status: the current_status of the sheet 
     '''
-    print("agent_act called")
     client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
     act_content = types.Content(
         role="user",
         parts=[types.Part(text=f"INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
     )
-    tools = types.Tool(function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
+    tools = types.Tool(google_search=types.GoogleSearch, function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
     config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])
     agent_state_msg_history.append(act_content)
     response = client.models.generate_content(
@@ -107,13 +107,46 @@ def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[L
         config=config
     )
     tool_call = response.candidates[0].content.parts[0].function_call
-    print(tool_call)
     ## actually call the tool
-    if tool_call.name == "execute_code":
+    if tool_call and tool_call.name == "execute_code":
         # add the sheet_status to the df 
         df = agent_helpers.convert_sheet_array_to_df(sheet_status)
         tool_call.args['df'] = df 
         result: pd.DataFrame = execute_code(**tool_call.args) # this is the resulting dataframe 
+        sheet_status = agent_helpers.convert_df_to_sheet_array(result)
+        agent_state_msg_history.append(response.candidates[0].content)
+    return True, agent_state_msg_history, sheet_status
+
+def agent_web_search(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]): 
+    '''
+    sample web search implementation
+    just make a web search for now 
+    include other tools to see if it works in conjunction
+    '''
+    client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    act_content = types.Content(
+        role="user",
+        parts=[types.Part(text=f"INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
+    )
+    tools = types.Tool(
+        google_search=types.GoogleSearch(),
+        function_declarations=[view_spreadsheet_declaration, execute_code_declaration]
+    )
+    config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])
+    agent_state_msg_history.append(act_content)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=act_content,
+        config=config
+    )
+    tool_call = response.candidates[0].content.parts[0].function_call
+    if tool_call.name == "execute_code":
+        # add the sheet_status to the df 
+        df = agent_helpers.convert_sheet_array_to_df(sheet_status)
+        tool_call.args['df'] = df 
+        #result: pd.DataFrame = execute_code(**tool_call.args) # this is the resulting dataframe 
+        print(tool_call.args)
+        result = None
     sheet_status = agent_helpers.convert_df_to_sheet_array(result)
     agent_state_msg_history.append(response.candidates[0].content)
     return True, agent_state_msg_history, sheet_status
@@ -159,23 +192,3 @@ def execute_code(code: str, df: pd.DataFrame):
     }
     exec(code, globals(), variables)
     return variables['df']
-
-if __name__ == "__main__":
-    ## first thing would be to make a new agent state 
-    ## create a 40 x 24 grid to represent input data 
-    input_grid = [['' for x in range(24)] for y in range(40)]
-    #user_request = "Please add the 10 countries with the highest population in the first column"
-    user_request = "hello"
-    # goal: return grid with this back to the frontend, making sure to use celery
-    # mock the request 
-    base = "http://127.0.0.1:8000"
-    response = requests.post(base + '/agent_request', json= {
-        "user_msg": user_request,
-        "sheet_status": input_grid
-    })
-    print(response.status_code)
-    task_id = response.json()["task_id"]
-    # wait 
-    time.sleep(3)
-    task_response = requests.get(base + f'/tasks/{task_id}')
-    print(task_response.json())
