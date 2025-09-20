@@ -7,10 +7,14 @@ import os
 from typing import List 
 import server.agent2 as agent
 
-def test_agent():
-    user_request = "Can you add the first 20 biggest countries by population to the first column"
+#def test_agent():
+#    user_request = "Can you add the first 20 biggest countries by population to the first column"
+#    sheet_state = [['' for x in range(24)] for y in range(40)]
+#    agent_obj = agent.Agent(user_request, sheet_state)
+#    agent_obj.agent_loop()
 
+def test_agent_search():
+    user_request = "tell me what tools you have access to, and put it in the first column of the sheet. Do you have access to search? make sure to include search if you can search."
     sheet_state = [['' for x in range(24)] for y in range(40)]
     agent_obj = agent.Agent(user_request, sheet_state)
-
     agent_obj.agent_loop()

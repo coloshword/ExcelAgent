@@ -50,6 +50,7 @@ class AgentRequest(BaseModel):
 
 class AgentLoopOut(BaseModel):
     sheet_status: List[List[str]]
+    finish_reason: str
 
 class TaskResultOut(BaseModel):
     task_id: str

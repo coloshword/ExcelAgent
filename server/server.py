@@ -132,9 +132,13 @@ def get_task_status(task_id: str):
             task_id: the task id
     '''
     task_result = worker.get_async_result(task_id)
+
     result = {
         "task_id": task_id,
         "task_status": task_result.status,
         "task_result": task_result.result
     }
+
+    print("server result")
+    print(result)
     return result 

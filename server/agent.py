@@ -1,194 +1,158 @@
-import time
-import requests
-from typing import List, Tuple 
-from .models import AgentLoopOut
-import json
-from google.genai import types, Client
+## agent loop rewrite 
+from google.genai import types, Client 
 import os 
+from typing import List 
 import pandas as pd
 from . import agent_helpers
-
-## agent.py: defines the module that defines the agent behavior. It is important that all these functions are called 
-# from celery
+import json
 
 client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
-
 with open("./server/agent_config.json") as file:
     agent_config = json.load(file)
 
-def init_agent_message_history(user_request: str) -> List[types.Content]:
-    '''
-    initiates the message history of the agent, from the first message, the user request. Note: the reasoning step is appeneded to this first message to trigger the first part of the agent_lop
-        Params:
-            user_request: the user request 
-        Returns:
-            agent_message_history in the form of a list of genai.types.Content
-    '''
-    contents = [
-        types.Content(
-            role="user", 
-            parts=[types.Part(text=f"USER REQUEST: {user_request} | INSTRUCTIONS: {agent_config["agent_reason_prompt"]}")]
-        ),
-    ]
-    return contents
-     
-def agent_loop(user_msg: str, sheet_status: List[List[str]]) -> dict:
-    '''
-    defines the main agentic loop
-    agent loop: takes in agent_state_message_history: the current message history, in OpenAI api form
-    also takes in the sheet_status. 
-        Params:
-            agent_state_msg_history: The message history of the agent 
-            sheet_status: the status of the sheet currently
-    '''
-    task_done = False 
-    next_step = 'Reason' # we update this to determine if we want to reason or if we want to act
-    ## create the agent_message_history
-    agent_state_msg_history = init_agent_message_history(user_msg)
-    while not task_done:
-        # call LM agent 
-        if next_step == 'Reason':
-            task_done, agent_state_msg_history, sheet_status = agent_reason(agent_state_msg_history, sheet_status)
-            next_step = 'Act'
-        else:
-            task_done, agent_state_msg_history, sheet_status = agent_act(agent_state_msg_history, sheet_status)
-            next_step = 'Reason'
-    return {"sheet_status": sheet_status}
 
+## Agent implementation 
+class Agent():
+    sheet_df: pd.DataFrame
+    is_finished: bool = False
+    num_cycles: int = 0
+    agent_msg_history: List[types.Content]
+    current_step_type: str = 'Reason' ## the current step type being reason or act 
+    finish_reason: str | None = ''
+    tool_calls_by_name = []
 
-def agent_reason(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]) -> Tuple[bool, List[types.Content]]:
-    '''
-    Executes one step of reasoning. Note: modifies agent_state_msg_history in-place
-        Params:
-            - agent_state_msg_history: the current agent message history
-            - sheet_status: the current_status of the sheet 
-    '''
-    # the first call is already reasoning  
-    client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    # add  grounding ? 
-    tools = types.Tool(google_search=types.GoogleSearch, function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
-    config = types.GenerateContentConfig(
-        system_instruction=agent_config["agent_system_prompt"], 
-        tools=[tools], 
-        automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True)
-    )
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=agent_state_msg_history,
-        config=config
-    )
-    # add response to the agent_history
-    if response.candidates == None or response.candidates[0].content == None:
-        print(response)
-        raise Exception("None returned for reasoning step")
-    print("agent_reason called") 
-    agent_state_msg_history.append(response.candidates[0].content)
-    return False, agent_state_msg_history, sheet_status
+    # Defines a tool for the agent (function) to view the spreadsheet as a df
 
-
-def agent_act(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]) -> Tuple[bool, List[types.Content]]:
-    '''
-    Executes one step of reasoning. Note: modifies agent_state_msg_history in-place
-        Params:
-            - agent_state_msg_history: the current agent message history
-            - sheet_status: the current_status of the sheet 
-    '''
-    client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    act_content = types.Content(
-        role="user",
-        parts=[types.Part(text=f"INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
-    )
-    tools = types.Tool(google_search=types.GoogleSearch, function_declarations=[view_spreadsheet_declaration, execute_code_declaration])
-    config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])
-    agent_state_msg_history.append(act_content)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=agent_state_msg_history,
-        config=config
-    )
-    tool_call = response.candidates[0].content.parts[0].function_call
-    ## actually call the tool
-    if tool_call and tool_call.name == "execute_code":
-        # add the sheet_status to the df 
-        df = agent_helpers.convert_sheet_array_to_df(sheet_status)
-        tool_call.args['df'] = df 
-        result: pd.DataFrame = execute_code(**tool_call.args) # this is the resulting dataframe 
-        sheet_status = agent_helpers.convert_df_to_sheet_array(result)
-        agent_state_msg_history.append(response.candidates[0].content)
-    return True, agent_state_msg_history, sheet_status
-
-def agent_web_search(agent_state_msg_history: List[types.Content], sheet_status: List[List[str]]): 
-    '''
-    sample web search implementation
-    just make a web search for now 
-    include other tools to see if it works in conjunction
-    '''
-    client = Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    act_content = types.Content(
-        role="user",
-        parts=[types.Part(text=f"INSTRUCTIONS: {agent_config["agent_act_prompt"]}")]
-    )
-    tools = types.Tool(
-        google_search=types.GoogleSearch(),
-        function_declarations=[view_spreadsheet_declaration, execute_code_declaration]
-    )
-    config = types.GenerateContentConfig(system_instruction=agent_config["agent_system_prompt"], tools=[tools])
-    agent_state_msg_history.append(act_content)
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=act_content,
-        config=config
-    )
-    tool_call = response.candidates[0].content.parts[0].function_call
-    if tool_call.name == "execute_code":
-        # add the sheet_status to the df 
-        df = agent_helpers.convert_sheet_array_to_df(sheet_status)
-        tool_call.args['df'] = df 
-        #result: pd.DataFrame = execute_code(**tool_call.args) # this is the resulting dataframe 
-        print(tool_call.args)
-        result = None
-    sheet_status = agent_helpers.convert_df_to_sheet_array(result)
-    agent_state_msg_history.append(response.candidates[0].content)
-    return True, agent_state_msg_history, sheet_status
-
-## The section below defines specific tools 
-
-# Defines a tool for the agent (function) to view the spreadsheet as a df
-view_spreadsheet_declaration = {
-    "name": "view_spreadsheet",
-    "description": "View the spreadsheet the user has in front of them, in the form of a pandas dataframe",
-    "parameters": {
-        "type": "object",
-        "properties": {},
-        "required": [],
-    },
-}
-def view_spreadsheet():
-    print("you are viewing the spreadsheet")
-
-execute_code_declaration = {
-    "name": "execute_code",
-    "description": "Executes the code you provide in the tool call parameter. You are given a single input parameter, 'df' of type pandas.DataFrame. This is the dataframe representing the user's spreadsheet. By modifying this dataframe with your code, you can modify the user's spreadsheet. Do not redeclare 'df', it is given to you. Use it as if it has already been defined before.",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "code": {
-                "type": "string",
-                "description": "The code you want to execute"
-            }
-        },
-        "required": ["code"],
+    execute_code_declaration = {
+        "name": "execute_code",
+        "description": "Executes the code you provide in the tool call parameter. You are given a single input parameter, 'df' of type pandas.DataFrame. This is the dataframe representing the user's spreadsheet. By modifying this dataframe with your code, you can modify the user's spreadsheet. Do not redeclare 'df', it is given to you. Use it as if it has already been defined before.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string",
+                    "description": "The code you want to execute"
+                }
+            },
+            "required": ["code"],
+        }
     }
-}
 
-def execute_code(code: str, df: pd.DataFrame):
-    '''
-    Function to execute code 
-        Params:
-            code: the code to execute as a string 
-    '''
-    variables = {
-        'df': df
+    set_task_finished_declaration = {
+        "name": "set_task_finished",
+        "description": "Use this function to declare the task as finished. This must be called to end the agent loop. Once you call this function, the interaction ends. Call this function when the task is finished, and provide a finish_reason, which is the reason you are finished.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "finish_reason": {
+                    "type": "string",
+                    "description": "The reason you are finished. Could be something like 'I added the <task>'"
+                }
+            },
+            "required": ["finish_reason"],
+        }
     }
-    exec(code, globals(), variables)
-    return variables['df']
+
+    tools = types.Tool(function_declarations=[execute_code_declaration, set_task_finished_declaration])
+
+    def __init__(self, user_request: str, sheet_status: List[List[str]]):
+        self.sheet_df = agent_helpers.convert_sheet_array_to_df(sheet_status)
+        self.user_request = user_request
+        self.agent_msg_history = []
+
+        self.act_config = types.GenerateContentConfig(
+            system_instruction=agent_config["agent_system_prompt"], 
+            tools=[self.tools], 
+        )
+
+    def agent_loop(self):
+        '''
+        defines the agent loop
+        '''
+        MAX_CYCLES = 10
+        self.current_step_type = 'Act'
+        while not(self.is_finished) and self.num_cycles < MAX_CYCLES:
+            print(f"CYCLE {self.num_cycles}")
+            self.agent_act()
+            self.num_cycles += 1
+        ## return the agent sheet state, as a list !
+        sheet_state = agent_helpers.convert_df_to_sheet_array(self.sheet_df)
+        return  {
+            "sheet_status": sheet_state,
+            "finish_reason": self.finish_reason
+        }
+
+    def agent_act(self):
+        act_content = types.Content(
+            role="user",
+            parts=[types.Part(text=f"USER REQUEST: {self.user_request} | INSTRUCTIONS: {agent_config["agent_act_prompt"]} | The spreadsheet dataframe now looks like this {self.view_spreadsheet()}")]
+        )
+        self.agent_msg_history.append(act_content)
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=self.agent_msg_history,
+            config=self.act_config 
+        )
+        if not resp.candidates:
+            raise Exception(f"resp.candidates is None")
+        # check for tool call
+        # get the tool call 
+        tool_call = resp.candidates[0].content.parts[0].function_call
+        print(f'TOOL CALL {tool_call}')
+        # first we should add the new status to the message history 
+        self.agent_msg_history.append(resp.candidates[0].content)
+        if tool_call and tool_call.name == "execute_code":
+            print("Execute code called")
+            print("assignment")
+            ## we would probably try to execute the code, if there is an error append the error message to the history...
+            try: 
+                result: pd.DataFrame = self.execute_code(**tool_call.args)
+                print("result was created")
+                self.tool_calls_by_name.append("execute code")
+                # no issue, update result.
+                self.sheet_df = result 
+            except Exception as e:
+                # append error for the next run 
+                self.agent_msg_history.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part(text=f"There was an error in executing code| ERROR: {e}")]
+                    )
+                )
+        elif tool_call and tool_call.name == "set_task_finished":
+            self.tool_calls_by_name.append("set_task_finished")
+            try:
+                self.set_task_finished(**tool_call.args)
+            except Exception as e:
+                self.agent_msg_history.append(
+                    types.Content(
+                        role="user",
+                        parts=[types.Part(text=f"There was an error in executing code| ERROR: {e}")]
+                    )
+                )
+
+    ## agent tools 
+    def view_spreadsheet(self):
+        return self.sheet_df.to_string()
+
+    def execute_code(self, code:str): 
+        '''
+        Function to execute code 
+            Params:
+                code: the code to execute as a string 
+        '''
+        print("execute code")
+        variables = {
+            'df': self.sheet_df
+        }
+        print("here")
+        exec(code, globals(), variables)
+        return variables['df']
+
+    def set_task_finished(self, finish_reason: str):
+        '''
+        sets the agent internal state to finished 
+        '''
+        self.is_finished = True
+        self.finish_reason = finish_reason
+

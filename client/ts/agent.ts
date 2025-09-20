@@ -16,6 +16,7 @@ interface TaskResult {
 
 interface TaskResultSheetObject {
     sheet_status: string[][]
+    finish_reason: string
 }
 
 type AddMsg = (text: string) => void;
@@ -39,11 +40,14 @@ function displayAuthenticatedResource(user: PublicUser) {
  */
 function updateTaskResult(resultResponse: TaskResult, addMsgToChatHistory: AddMsg, gridWidget: GridWidget) {
     if (resultResponse.task_result) {
-        addMsgToChatHistory('Request completed')
+        addMsgToChatHistory(resultResponse.task_result.finish_reason);
+        // update the sate of the grid Widget
+        //gridWidget.updateGridState(resultResponse.task_result);
+        gridWidget.updateGridState(resultResponse.task_result.sheet_status);
+
+    } else {
+        console.log("request did not have a task_result")
     }
-    // update the sate of the grid Widget
-    //gridWidget.updateGridState(resultResponse.task_result);
-    gridWidget.updateGridState(resultResponse.task_result.sheet_status);
 }
 
 /**
