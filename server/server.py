@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 from . import auth
-from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut
+from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, PostSheetsOut
 import googleapiclient.discovery
 from . import login_with_google
 from .login_with_google import flow
@@ -142,3 +142,10 @@ def get_task_status(task_id: str):
     print("server result")
     print(result)
     return result 
+
+@app.post("/sheets", response_model=PostSheetsOut)
+def create_sheet(current_user: User = Depends(auth.get_current_user)):
+    '''
+    creates a sheet in the db. We also want to get the user_id... this would be using the auth model
+    '''
+    pass 

@@ -56,3 +56,6 @@ class TaskResultOut(BaseModel):
     task_id: str
     task_status: str 
     task_result: AgentLoopOut | None
+
+class PostSheetsOut(BaseModel):
+    sheet_id: int # the internal id of the sheet

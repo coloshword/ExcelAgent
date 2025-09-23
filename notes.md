@@ -186,7 +186,7 @@ React --> Reason (think about the tool you need) --> Act (call the tool)
 ### project todos 
 1) make the spreadsheet more "spreadsheet" like (auto expanding rows, etc...)
 
-2) some sort of way to allow for search? the agent should be able to search things up
+2) some sort of way to allow for search? the agent should be able to search things up -- DONE
 
 3) Spreadsheet functions (closer to excel)
 
@@ -218,3 +218,76 @@ def agent_loop():
 - work on including search
 - solution: define two tools, and the first one would be a search tool, if necessary. 
     - fix error where if creating a task fails, we shoul NOT poll
+
+- with web search and agent calls, agentic portion should be done for now 
+- work on actually making this a spreadsheet tool, like google sheets 
+
+- we need a way to "remember" each task in the postgres table 
+
+
+### Whiteboarding 
+
+Data model
+
+1) We need '/tasks', to create a new task for the agent
+    - do we need to include history of tasks? --> no, that way context length can't be exceeded
+
+    - if it fails to remember, then it might be worth it to include the message history
+    - we will make it remember the user history 
+    - for now not worry
+
+2) We already have users model
+
+3) each user will have Sheets, which is the sheets session that the user has open
+    -- for now we ignore the agent_message history
+
+
+USERS
+-----
+id
+google_suhb
+email
+created_on
+last_login
+
+SHEETS
+----
+id
+sheet_status: text[][]
+user_id: FK
+
+
+
+** on start **
+put FK on the child(many)
+- index?  --> create index for sheets_user_id_index
+
+- tasks will remain a separate thing right now...
+
+** UI **
+- on start up, we see a modal. 
+- LHS: '+' sign with starting a new sheet (OR UPLOAD SHEET (XLSX, CSV, or even google sheets integration))
+- if we choose PAST sheet: we update the sheet_state to the sheet id 
+- RHS: Past Sheets
+
+- create a new sheet on startup, basically as you load into agent_html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
