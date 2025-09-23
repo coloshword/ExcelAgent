@@ -213,3 +213,8 @@ def agent_loop():
 - defines the main agent loop
 - think --> act loop
 - when done? --> flag as done, tool to update the state to done = True? with a 6 step limit 
+
+## 09/22/25:
+- work on including search
+- solution: define two tools, and the first one would be a search tool, if necessary. 
+    - fix error where if creating a task fails, we shoul NOT poll
