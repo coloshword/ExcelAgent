@@ -272,6 +272,9 @@ put FK on the child(many)
 
 - create a new sheet on startup, basically as you load into agent_html
 
+- to not kill the server, we will include a save button to save the current state of the sheet
+- we don't want to create a state... a state is kind of pointless 
+
 
 
 

@@ -8,6 +8,7 @@ from datetime import datetime
 User: Model that defines a User internally, same as db
 '''
 class User(BaseModel):
+    id: int
     google_sub: str 
     email: str 
     created_on: datetime
@@ -57,5 +58,12 @@ class TaskResultOut(BaseModel):
     task_status: str 
     task_result: AgentLoopOut | None
 
+class PostSheetsIn(BaseModel):
+    sheet_status: List[List[str]]
+
 class PostSheetsOut(BaseModel):
     sheet_id: int # the internal id of the sheet
+
+class GetSheetsOut(BaseModel):
+    # the output of get_sheets (returning the sheet_state )
+    sheet_status: List[List[str]]

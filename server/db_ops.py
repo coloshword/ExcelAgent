@@ -81,19 +81,19 @@ def create_user(pool: SimpleConnectionPool, google_user_info: dict):
             pool: the pool to get conns from 
             google_user_info: the google_user_info dictionary 
     '''
-    conn = pool.getconn()
-    try:
-        user = {
-            "google_sub": google_user_info["id"],
-            "email": google_user_info["email"],
-            "created_on": datetime.now(),
-            "last_login": datetime.now()
-        }
-        # create a user object 
-        #call the insert wrapper 
-        insert_model_to_table(User(**user), 'users', conn, 'id')
-    finally:
-        pool.putconn(conn)
+    time_now = datetime.now()
+    conn: psycopg2.extensions.connection
+    with pool.getconn() as conn, conn.cursor() as cur:
+        query = """
+            INSERT into users (google_sub, email, created_on, last_login)
+            VALUES (%s, %s, %s, %s)
+            returning id
+            """
+        cur.execute(query, (google_user_info["id"], google_user_info["email"], time_now, time_now))
+        conn.commit()
+        id = cur.fetchone()[0]
+        return id
+
 
 def update_last_login_time(conn: psycopg2.extensions.connection, google_sub: str):
     cur = conn.cursor()
@@ -149,8 +149,10 @@ def is_user_in_db(pool:SimpleConnectionPool, sub:str) -> bool:
             SELECT * from users as u
             where u.google_sub = %s 
         '''
+        print("calling is user_in db")
         cur.execute(query, (sub,))
         rows:tuple = cur.fetchone()
+        print(f"rows : {rows}")
         if rows:
             return True
         else:
@@ -178,6 +180,22 @@ def initialize_agent_state_in_db(pool: SimpleConnectionPool, messages: List[dict
         conn.commit()
         id = cur.fetchone()[0]
         return id
+
+def create_sheet(sheet_status: List[List[str]], user: User, pool: SimpleConnectionPool):
+    '''
+    creates a sheet in the db
+    '''
+    conn: psycopg2.extensions.connection
+    with pool.getconn() as conn, conn.cursor() as cur:
+        query = """
+        INSERT into sheets (sheet_status, user_id) 
+        VALUES (%s, %s)
+        returning id
+        """
+        cur.execute(query, (sheet_status, user.id))
+        conn.commit()
+        id = cur.fetchone()[0]
+        return id 
 
 if __name__ == "__main__":
     pool = init_pool(1, 10)

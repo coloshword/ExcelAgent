@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 from . import auth
-from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, PostSheetsOut
+from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, PostSheetsOut, GetSheetsOut, PostSheetsIn
 import googleapiclient.discovery
 from . import login_with_google
 from .login_with_google import flow
@@ -139,13 +139,21 @@ def get_task_status(task_id: str):
         "task_result": task_result.result
     }
 
-    print("server result")
-    print(result)
     return result 
 
-@app.post("/sheets", response_model=PostSheetsOut)
-def create_sheet(current_user: User = Depends(auth.get_current_user)):
+@app.post("/sheets", response_model=PostSheetsOut, status_code=status.HTTP_201_CREATED)
+def create_sheet(post_sheets: PostSheetsIn, current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
     '''
     creates a sheet in the db. We also want to get the user_id... this would be using the auth model
+    '''
+    sheet_id = db_ops.create_sheet(post_sheets.sheet_status, current_user, pool)
+    return {
+        "sheet_id": sheet_id 
+    }
+    
+@app.get("/sheets/{sheet_id}", response_model=GetSheetsOut)
+def get_sheet(current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
+    '''
+    gets a sheet state if it is already created 
     '''
     pass 
