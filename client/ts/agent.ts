@@ -104,7 +104,6 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
             });
             const content = await response.json();
             // set the query parameter to be the value of content 
-            setQueryParam("state", content.agent_state_id)
             // this creates a taskID
             const taskID: string = content.task_id;
             // wait until task_status is finished...
@@ -135,6 +134,19 @@ function addDataGrid() {
 }
 
 /**
+ * setups event listeners for the sheet selector modal
+ */
+function activateSheetSelectorModal() {
+    console.log("this was called")
+    const createNewSheetBtn = document.querySelector(".create-new-sheet-btn") as HTMLButtonElement;
+    createNewSheetBtn.addEventListener('click', () => {
+        const sheetSelectorModal = document.querySelector(".sheet-selector-modal") as HTMLDivElement;
+        sheetSelectorModal.classList.add('hidden');
+        console.log("create new sheet called");
+    });
+}
+
+/**
  * set up function to be called at window load time 
  */
 async function setUp() {
@@ -148,6 +160,7 @@ async function setUp() {
     displayAuthenticatedResource(publicUserObj);
     const dataGridObj = addDataGrid();
     addChatWidget(dataGridObj);
+    activateSheetSelectorModal;
 }
 
 setUp();

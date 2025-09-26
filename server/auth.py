@@ -85,7 +85,6 @@ async def get_current_user(pool: SimpleConnectionPool = Depends(get_pool), token
     user = get_user(sub, pool)
     if user is None:
         raise credentials_exception
-    #public_user = PublicUser.model_validate(user.model_dump(include={'email'}))
     return user
 
 def login_and_get_jwt(pool: SimpleConnectionPool, google_sub: str) -> str:

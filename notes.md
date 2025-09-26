@@ -276,21 +276,7 @@ put FK on the child(many)
 - we don't want to create a state... a state is kind of pointless 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 09/25/25
+- edit tool use to call the next config for searching (don't search unless necessary)
+- frontend: add modal to either create a new chat or load a previous one 
+    - make sure we can't send a request unless a sheet is created 

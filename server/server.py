@@ -116,11 +116,8 @@ def create_agent_state(agent_state:AgentRequest, pool:SimpleConnectionPool=Depen
     # initialize the worker task 
     # include the message history 
     # initialize one if not made 
-    agent_message_history = agent_helpers.init_agent_message_history(agent_state.user_msg) 
-    agent_state_id = db_ops.initialize_agent_state_in_db(pool, agent_message_history, agent_state.sheet_status)
     task = worker.make_agent_request.delay(agent_state.user_msg, agent_state.sheet_status)
     return {
-        "agent_state_id": agent_state_id,
         "task_id": task.id
     }
 
@@ -150,6 +147,7 @@ def create_sheet(post_sheets: PostSheetsIn, current_user: User = Depends(auth.ge
     return {
         "sheet_id": sheet_id 
     }
+
     
 @app.get("/sheets/{sheet_id}", response_model=GetSheetsOut)
 def get_sheet(current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):

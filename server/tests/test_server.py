@@ -1,5 +1,9 @@
 from fastapi.testclient import TestClient
 from server.server import app
+import psycopg2
+from server.models import User
+import server.auth as auth
+
 #
 #def test_create_agent_state():
 #    with TestClient(app) as client:
@@ -11,12 +15,41 @@ from server.server import app
 #            })
 #        assert response.status_code == 201
 
+# create an auth dependency
+# pull the sample user from db
+def pull_sample_user():
+    '''
+    mock pulling the sample user (the sample user has google sub '12345678')
+    '''
+    pg_connection_d = {
+        'dbname': 'spreadsheet_agent_db',
+        'user': 'zestfest123',
+        'port': 5432
+    }
+    conn: psycopg2.extensions.connection = psycopg2.connect(**pg_connection_d)
+    mock_google_sub = '12345678'
+    cur = conn.cursor()
+    query = "SELECT * from users where google_sub = %s;"
+    
+    cur.execute(query, (mock_google_sub,))
+    user = cur.fetchone()
+    if user:
+        columns = [desc[0] for desc in cur.description]
+        d = dict(zip(columns, user))
+        return User(**d)
+    else:
+        raise Exception("Sample user not found")
+
+def override_auth_dependency():
+    return pull_sample_user()
+
+app.dependency_overrides[auth.get_current_user] = override_auth_dependency
+
 def test_create_sheet():
     '''
     tests creating a sheet 
     '''
     with TestClient(app) as client:
-        client.cookies = {"access_token": '12345678'}
         sheet_state = [['' for x in range(24)] for y in range(40)]
         response = client.post(
             "/sheets",
@@ -25,4 +58,4 @@ def test_create_sheet():
             }
         )
         assert response.status_code == 201 
-        assert isinstance(response.sheet_id, int)
+        assert isinstance(response.json()['sheet_id'], int)

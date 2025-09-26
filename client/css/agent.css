@@ -38,3 +38,37 @@
     height: 85svh;
     width: 100%;
 }
+
+.sheet-selector-modal {
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    width: 40rem;
+    height: 20rem;
+    display: flex;
+    flex-direction: row;
+    background-color: #efefef;
+    border-radius: 0.5rem;
+}
+
+.sheet-selector-modal-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.disabled {
+  background-color: dimgrey;
+  color: linen;
+  opacity: 1;
+}
+
+.hidden {
+    display: none;
+}
