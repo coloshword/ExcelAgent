@@ -59,3 +59,27 @@ def test_create_sheet():
         )
         assert response.status_code == 201 
         assert isinstance(response.json()['sheet_id'], int)
+
+def test_put_sheet():
+    with TestClient(app) as client:
+        sheet_state = [['' for _ in range(24)] for y in range(40)]
+        response = client.post(
+            "/sheets",
+            json={
+                "sheet_status": sheet_state
+            }
+        )
+
+        sheet_id = response.json()["sheet_id"]
+
+        # modify the sheet 
+        sheet_state[0] = ['x' for _ in range(24)]
+        put_response = client.put(
+            f"/sheets/{sheet_id}",
+            json={
+                "sheet_status": sheet_state
+            }
+        )
+        # verify 
+        assert put_response.status_code == 200
+        assert isinstance(response.json()['sheet_id'], int)

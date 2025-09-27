@@ -280,3 +280,14 @@ put FK on the child(many)
 - edit tool use to call the next config for searching (don't search unless necessary)
 - frontend: add modal to either create a new chat or load a previous one 
     - make sure we can't send a request unless a sheet is created 
+
+- we added a way to create a new sheet, now we need to add a capability to "save a sheet" state 
+    - PUT(<sheet_state>, id)...
+
+- after that, we need a way to be able to get the sheet state and save it based on what we have...
+
+- important: get rid of web search all the time, only web search when necessary
+
+- implemented PUT (sheet state)
+
+- We need to implement a selector(select previous sheets)

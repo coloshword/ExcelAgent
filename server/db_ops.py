@@ -197,5 +197,22 @@ def create_sheet(sheet_status: List[List[str]], user: User, pool: SimpleConnecti
         id = cur.fetchone()[0]
         return id 
 
+def update_sheet(sheet_status: List[List[str]], user: User, pool: SimpleConnectionPool):
+    '''
+    updates the status of a sheet in the db
+    '''
+    conn: psycopg2.extensions.connection
+    with pool.getconn() as conn, conn.cursor() as cur:
+        query = """
+        UPDATE sheets
+        SET sheet_status = %s
+        WHERE user_id = %s
+        returning id 
+        """
+        cur.execute(query, (sheet_status, user.id))
+        conn.commit()
+        id = cur.fetchone()[0]
+        return id
+
 if __name__ == "__main__":
     pool = init_pool(1, 10)

@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 from . import auth
-from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, PostSheetsOut, GetSheetsOut, PostSheetsIn
+from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, ModifySheetsOut, GetSheetsOut, ModifySheetsIn
 import googleapiclient.discovery
 from . import login_with_google
 from .login_with_google import flow
@@ -106,7 +106,7 @@ def google_auth_redirect(req: Request, pool:SimpleConnectionPool = Depends(get_p
 
 ## endpoint to create an agent state 
 @app.post("/agent_request", status_code=status.HTTP_201_CREATED)
-def create_agent_state(agent_state:AgentRequest, pool:SimpleConnectionPool=Depends(get_pool)):
+def create_agent_state(agent_state:AgentRequest, pool:SimpleConnectionPool=Depends(get_pool), user: User=Depends(auth.get_current_user)):
     '''
     creates the agent state. An agent state takes in the current state of the sheet to create it 
         Params:
@@ -122,7 +122,7 @@ def create_agent_state(agent_state:AgentRequest, pool:SimpleConnectionPool=Depen
     }
 
 @app.get("/tasks/{task_id}", response_model=TaskResultOut)
-def get_task_status(task_id: str):
+def get_task_status(task_id: str, user: User=Depends(auth.get_current_user)):
     '''
     gets the task_status of the celery worker (agent flow)
         Params:
@@ -138,8 +138,8 @@ def get_task_status(task_id: str):
 
     return result 
 
-@app.post("/sheets", response_model=PostSheetsOut, status_code=status.HTTP_201_CREATED)
-def create_sheet(post_sheets: PostSheetsIn, current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
+@app.post("/sheets", response_model=ModifySheetsOut, status_code=status.HTTP_201_CREATED)
+def create_sheet(post_sheets: ModifySheetsIn, current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
     '''
     creates a sheet in the db. We also want to get the user_id... this would be using the auth model
     '''
@@ -148,10 +148,23 @@ def create_sheet(post_sheets: PostSheetsIn, current_user: User = Depends(auth.ge
         "sheet_id": sheet_id 
     }
 
+@app.put("/sheets/{sheet_id}", response_model=ModifySheetsOut, status_code=status.HTTP_200_OK)
+def update_sheet_status(post_sheets: ModifySheetsIn, current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
+    sheet_id = db_ops.update_sheet(post_sheets.sheet_status, current_user, pool)
+    return {
+        "sheet_id": sheet_id
+    }
     
 @app.get("/sheets/{sheet_id}", response_model=GetSheetsOut)
 def get_sheet(current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
     '''
     gets a sheet state if it is already created 
+    '''
+    pass 
+
+@app.get("/sheets/getUserSheets")
+def get_user_sheets():
+    '''
+    gets all the sheets for the user 
     '''
     pass 

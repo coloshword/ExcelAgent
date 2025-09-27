@@ -58,10 +58,10 @@ class TaskResultOut(BaseModel):
     task_status: str 
     task_result: AgentLoopOut | None
 
-class PostSheetsIn(BaseModel):
+class ModifySheetsIn(BaseModel):
     sheet_status: List[List[str]]
 
-class PostSheetsOut(BaseModel):
+class ModifySheetsOut(BaseModel):
     sheet_id: int # the internal id of the sheet
 
 class GetSheetsOut(BaseModel):

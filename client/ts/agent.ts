@@ -66,6 +66,8 @@ async function pollTaskStatus(taskID: string, addMsgToChatHistory: AddMsg, gridW
                 headers: {
                     "Content-Type": "application/json"
                 },
+                credentials: "include",
+                mode: "cors",
             })
             const content = await response.json()
             if (content.task_status != 'PENDING' && intervalID != null) {
@@ -97,6 +99,8 @@ function makeChatWidgetCallback(addMsgToChatHistory: AddMsg, datagridWidget: Gri
                 headers: {
                     "Content-Type": "application/json"
                 },
+                credentials: "include",
+                mode: "cors",
                 body: JSON.stringify({
                     "user_msg": msg,
                     "sheet_status": currentGridData
@@ -135,15 +139,65 @@ function addDataGrid() {
 
 /**
  * setups event listeners for the sheet selector modal
+ * dataGridObj: the GridWidget element to get the current state of the sheet 
  */
-function activateSheetSelectorModal() {
-    console.log("this was called")
+function activateSheetSelectorModal(dataGridObj: GridWidget) {
     const createNewSheetBtn = document.querySelector(".create-new-sheet-btn") as HTMLButtonElement;
-    createNewSheetBtn.addEventListener('click', () => {
+    const gridData = dataGridObj.getGridData()
+    createNewSheetBtn.addEventListener('click', async () => {
         const sheetSelectorModal = document.querySelector(".sheet-selector-modal") as HTMLDivElement;
-        sheetSelectorModal.classList.add('hidden');
-        console.log("create new sheet called");
+        // make a request to create a new sheet 
+        const endpoint = `${config['server_uri']}/sheets`;
+        const res = await fetch(endpoint, {
+            method: "POST",
+            credentials: "include",
+            mode: "cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                sheet_status: gridData
+            }) 
+        });
+        const data = await res.json();
+        if (data.sheet_id) {
+            setQueryParam("sheet_id", data.sheet_id);
+            sheetSelectorModal.classList.add('hidden');
+        }
     });
+}
+
+/**
+ * setups event listeners for the header functions
+ */
+function activateHeaderFunctions(dataGridObj: GridWidget) {
+    const saveBtn = document.querySelector(".save-btn") as HTMLButtonElement;
+    saveBtn.addEventListener('click', async () => {
+        const gridData = dataGridObj.getGridData();
+        const url = new URL(window.location.href);
+        const sheet_id = url.searchParams.get('sheet_id');
+        if (! sheet_id) {
+            return;
+        }
+        const endpoint = `${config['server_uri']}/sheets/${sheet_id}`
+        const res = await fetch(endpoint, {
+            method: "PUT",
+            credentials: "include",
+            mode: "cors",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body : JSON.stringify({
+                sheet_status: gridData
+            })
+        });
+    });
+}
+
+/**
+ * displaySavedSheets: display the user's previous sheets
+ */
+async function displaySavedSheets() {
 }
 
 /**
@@ -160,7 +214,8 @@ async function setUp() {
     displayAuthenticatedResource(publicUserObj);
     const dataGridObj = addDataGrid();
     addChatWidget(dataGridObj);
-    activateSheetSelectorModal;
+    activateSheetSelectorModal(dataGridObj);
+    activateHeaderFunctions(dataGridObj);
 }
 
 setUp();
