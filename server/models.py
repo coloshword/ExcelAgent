@@ -59,11 +59,20 @@ class TaskResultOut(BaseModel):
     task_result: AgentLoopOut | None
 
 class ModifySheetsIn(BaseModel):
+    sheet_name: str
     sheet_status: List[List[str]]
 
 class ModifySheetsOut(BaseModel):
     sheet_id: int # the internal id of the sheet
+    sheet_name: str 
 
 class GetSheetsOut(BaseModel):
     # the output of get_sheets (returning the sheet_state )
     sheet_status: List[List[str]]
+
+class Sheet(BaseModel):
+    id: int
+    sheet_name: str
+    sheet_status: List[List[str]]
+    last_update_time: datetime
+    user_id: int

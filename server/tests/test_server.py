@@ -51,10 +51,12 @@ def test_create_sheet():
     '''
     with TestClient(app) as client:
         sheet_state = [['' for x in range(24)] for y in range(40)]
+        sheet_name = "Untitled"
         response = client.post(
             "/sheets",
             json={
-                "sheet_status": sheet_state
+                "sheet_status": sheet_state,
+                "sheet_name": sheet_name
             }
         )
         assert response.status_code == 201 
@@ -63,13 +65,14 @@ def test_create_sheet():
 def test_put_sheet():
     with TestClient(app) as client:
         sheet_state = [['' for _ in range(24)] for y in range(40)]
+        sheet_name = "Untitled"
         response = client.post(
             "/sheets",
             json={
-                "sheet_status": sheet_state
+                "sheet_status": sheet_state,
+                "sheet_name": sheet_name
             }
         )
-
         sheet_id = response.json()["sheet_id"]
 
         # modify the sheet 
@@ -77,9 +80,20 @@ def test_put_sheet():
         put_response = client.put(
             f"/sheets/{sheet_id}",
             json={
-                "sheet_status": sheet_state
+                "sheet_status": sheet_state,
+                "sheet_name": sheet_name
             }
         )
         # verify 
         assert put_response.status_code == 200
         assert isinstance(response.json()['sheet_id'], int)
+
+app.dependency_overrides[auth.get_current_user] = override_auth_dependency
+
+def test_get_user_sheet():
+    with TestClient(app) as client:
+        response = client.get(
+            "/sheets/getUserSheets"
+        )
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)

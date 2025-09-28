@@ -14,7 +14,9 @@ CREATE TABLE if not exists agent_state (
 
 CREATE TABLE if not exists sheets(
     id BIGSERIAL PRIMARY KEY,
+    sheet_name TEXT not NULL,
     sheet_status text[][] NOT NULL,
+    last_update_time TIMESTAMPTZ NOT NULL,
     user_id BIGINT references users(id)
 );
 

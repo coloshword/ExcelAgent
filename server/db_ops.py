@@ -181,23 +181,24 @@ def initialize_agent_state_in_db(pool: SimpleConnectionPool, messages: List[dict
         id = cur.fetchone()[0]
         return id
 
-def create_sheet(sheet_status: List[List[str]], user: User, pool: SimpleConnectionPool):
+def create_sheet(sheet_name: str, sheet_status: List[List[str]], user: User, pool: SimpleConnectionPool):
     '''
     creates a sheet in the db
     '''
     conn: psycopg2.extensions.connection
     with pool.getconn() as conn, conn.cursor() as cur:
         query = """
-        INSERT into sheets (sheet_status, user_id) 
-        VALUES (%s, %s)
-        returning id
+        INSERT into sheets (sheet_name, sheet_status, last_update_time, user_id) 
+        VALUES (%s, %s, %s, %s)
+        returning id, sheet_name
         """
-        cur.execute(query, (sheet_status, user.id))
+        last_update_time = datetime.now()
+        cur.execute(query, (sheet_name, sheet_status, last_update_time, user.id))
         conn.commit()
-        id = cur.fetchone()[0]
-        return id 
+        row = cur.fetchone()
+        return row
 
-def update_sheet(sheet_status: List[List[str]], user: User, pool: SimpleConnectionPool):
+def update_sheet(sheet_id: int, sheet_name: str, sheet_status: List[List[str]], pool: SimpleConnectionPool):
     '''
     updates the status of a sheet in the db
     '''
@@ -205,14 +206,36 @@ def update_sheet(sheet_status: List[List[str]], user: User, pool: SimpleConnecti
     with pool.getconn() as conn, conn.cursor() as cur:
         query = """
         UPDATE sheets
-        SET sheet_status = %s
-        WHERE user_id = %s
-        returning id 
+        SET sheet_name = %s, sheet_status = %s
+        WHERE id = %s
+        returning id, sheet_name 
         """
-        cur.execute(query, (sheet_status, user.id))
+        cur.execute(query, (sheet_name, sheet_status, sheet_id))
         conn.commit()
-        id = cur.fetchone()[0]
-        return id
+        row = cur.fetchone()
+        return row
+
+def get_user_sheets(user: User, pool: SimpleConnectionPool):
+    '''
+    gets all sheets of a given user 
+    '''
+    conn = psycopg2.extensions.connection
+    with pool.getconn() as conn, conn.cursor() as cur:
+        query = """
+        SELECT * from sheets
+        WHERE user_id = %s
+        """
+        cur.execute(query, (user.id,))
+        conn.commit()
+        rows = cur.fetchmany()
+        results = [Sheet(
+            id = row[0],
+            sheet_name = row[1],
+            sheet_status = row[2],
+            last_update_time = row[3],
+            user_id = row[4]
+        ) for row in rows]
+        return results
 
 if __name__ == "__main__":
     pool = init_pool(1, 10)

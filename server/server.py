@@ -5,7 +5,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from datetime import timedelta
 from . import auth
-from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, ModifySheetsOut, GetSheetsOut, ModifySheetsIn
+from .models import User, PublicUser, ChatMessage, FileData, AgentRequest, TaskResultOut, ModifySheetsOut, GetSheetsOut, ModifySheetsIn, Sheet
 import googleapiclient.discovery
 from . import login_with_google
 from .login_with_google import flow
@@ -143,28 +143,24 @@ def create_sheet(post_sheets: ModifySheetsIn, current_user: User = Depends(auth.
     '''
     creates a sheet in the db. We also want to get the user_id... this would be using the auth model
     '''
-    sheet_id = db_ops.create_sheet(post_sheets.sheet_status, current_user, pool)
+    sheet_info = db_ops.create_sheet(post_sheets.sheet_name, post_sheets.sheet_status, current_user, pool)
     return {
-        "sheet_id": sheet_id 
+        "sheet_id": sheet_info[0],
+        "sheet_name": sheet_info[1]
     }
 
 @app.put("/sheets/{sheet_id}", response_model=ModifySheetsOut, status_code=status.HTTP_200_OK)
-def update_sheet_status(post_sheets: ModifySheetsIn, current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
-    sheet_id = db_ops.update_sheet(post_sheets.sheet_status, current_user, pool)
+def update_sheet_status(sheet_id: int, post_sheets: ModifySheetsIn, current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
+    sheet_info = db_ops.update_sheet(sheet_id, post_sheets.sheet_name, post_sheets.sheet_status, pool)
     return {
-        "sheet_id": sheet_id
+        "sheet_id": sheet_info[0],
+        "sheet_name": sheet_info[1]
     }
-    
-@app.get("/sheets/{sheet_id}", response_model=GetSheetsOut)
-def get_sheet(current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
-    '''
-    gets a sheet state if it is already created 
-    '''
-    pass 
 
-@app.get("/sheets/getUserSheets")
-def get_user_sheets():
+@app.get("/sheets/getUserSheets", status_code=status.HTTP_200_OK)
+def get_user_sheets(current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
     '''
-    gets all the sheets for the user 
+    gets all the sheets for a current user 
     '''
-    pass 
+    all_sheets_info = db_ops.get_user_sheets(current_user, pool)
+    return all_sheets_info

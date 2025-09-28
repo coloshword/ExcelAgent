@@ -291,3 +291,11 @@ put FK on the child(many)
 - implemented PUT (sheet state)
 
 - We need to implement a selector(select previous sheets)
+
+- we need to update the system to include the current name of the sheet...
+- we should be abled to have a default name (Untitled...), Untitled should be a valid name 
+- last_update_time as well
+
+### 09/27/25:
+    - save the sheet state now 
+    - add endpoint to get all sheets of the given user

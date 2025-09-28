@@ -1,7 +1,7 @@
 import { checkAuthStatus, redirectToLogin, setQueryParam } from "./utils.js"
 import { ChatWidget } from "./components/ChatWidget.js";
 import { GridWidget } from "./components/GridWidget.js";
-import type { FileData } from "./models.js";
+import type { FileData, ModifySheetsIn, ModifySheetsOut } from "./models.js";
 import  config  from "./config.js";
 
 interface PublicUser {
@@ -148,6 +148,10 @@ function activateSheetSelectorModal(dataGridObj: GridWidget) {
         const sheetSelectorModal = document.querySelector(".sheet-selector-modal") as HTMLDivElement;
         // make a request to create a new sheet 
         const endpoint = `${config['server_uri']}/sheets`;
+        const payload: ModifySheetsIn = {
+            sheet_name: "Untitled",
+            sheet_status: gridData
+        }
         const res = await fetch(endpoint, {
             method: "POST",
             credentials: "include",
@@ -155,13 +159,11 @@ function activateSheetSelectorModal(dataGridObj: GridWidget) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                sheet_status: gridData
-            }) 
+            body: JSON.stringify(payload)
         });
-        const data = await res.json();
+        const data: ModifySheetsOut = await res.json();
         if (data.sheet_id) {
-            setQueryParam("sheet_id", data.sheet_id);
+            setQueryParam("sheet_id", String(data.sheet_id));
             sheetSelectorModal.classList.add('hidden');
         }
     });
@@ -180,6 +182,10 @@ function activateHeaderFunctions(dataGridObj: GridWidget) {
             return;
         }
         const endpoint = `${config['server_uri']}/sheets/${sheet_id}`
+        const payload: ModifySheetsIn = {
+            sheet_name: "Untitled",
+            sheet_status: gridData
+        }
         const res = await fetch(endpoint, {
             method: "PUT",
             credentials: "include",
@@ -187,10 +193,10 @@ function activateHeaderFunctions(dataGridObj: GridWidget) {
             headers: {
                 "Content-Type": "application/json"
             },
-            body : JSON.stringify({
-                sheet_status: gridData
-            })
+            body : JSON.stringify(payload)
         });
+        const data: ModifySheetsOut = await res.json();
+        console.log(data);
     });
 }
 
@@ -198,6 +204,17 @@ function activateHeaderFunctions(dataGridObj: GridWidget) {
  * displaySavedSheets: display the user's previous sheets
  */
 async function displaySavedSheets() {
+    const endpoint = `${config['server_uri']}/sheets/getUserSheets`
+    const res = await fetch(endpoint, {
+        method: "GET",
+        credentials: "include",
+        mode: "cors",
+        headers: {
+            "Content-Type": "application/json"
+        },
+    })
+    const data = await res.json();
+    console.log(data);
 }
 
 /**
@@ -216,6 +233,7 @@ async function setUp() {
     addChatWidget(dataGridObj);
     activateSheetSelectorModal(dataGridObj);
     activateHeaderFunctions(dataGridObj);
+    displaySavedSheets();
 }
 
 setUp();
