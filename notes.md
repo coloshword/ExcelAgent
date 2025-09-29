@@ -300,3 +300,5 @@ put FK on the child(many)
     - save the sheet state now 
     - add endpoint to get all sheets of the given user
     - limit it to 10 (pagination of 10)
+
+    - add functionality to change the name of the sheet 

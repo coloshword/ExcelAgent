@@ -23,6 +23,7 @@ type AddMsg = (text: string) => void;
 
 // caching common items 
 const sheetSelectorModal = document.querySelector(".sheet-selector-modal") as HTMLDivElement;
+const sheetNameInput = document.querySelector(".sheet-name-input") as HTMLInputElement;
 
 /**
  * function to display the authenticatedResource
@@ -179,13 +180,15 @@ function activateHeaderFunctions(dataGridObj: GridWidget) {
     saveBtn.addEventListener('click', async () => {
         const gridData = dataGridObj.getGridData();
         const url = new URL(window.location.href);
+        // get the value of the 
+        const sheet_name = sheetNameInput.value;
         const sheet_id = url.searchParams.get('sheet_id');
         if (! sheet_id) {
             return;
         }
         const endpoint = `${config['server_uri']}/sheets/${sheet_id}`
         const payload: ModifySheetsIn = {
-            sheet_name: "Untitled",
+            sheet_name: sheet_name,
             sheet_status: gridData
         }
         const res = await fetch(endpoint, {
@@ -246,6 +249,7 @@ function loadSavedSheet(sheet: Sheet, gridWidgetObj: GridWidget) {
     gridWidgetObj.updateGridState(sheet.sheet_status);
     sheetSelectorModal.classList.add('hidden');
     setQueryParam("sheet_id", String(sheet.id));
+    sheetNameInput.value = sheet.sheet_name;
 }
 
 /**

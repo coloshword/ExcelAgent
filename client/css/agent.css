@@ -87,3 +87,7 @@
     border: 1px solid white;
     cursor: pointer;
 }
+
+.sheet-name-input {
+    font-size: 2rem;
+}
