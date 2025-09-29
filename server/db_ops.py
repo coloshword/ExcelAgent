@@ -219,7 +219,7 @@ def get_user_sheets(user: User, pool: SimpleConnectionPool):
     '''
     gets all sheets of a given user 
     '''
-    conn = psycopg2.extensions.connection
+    conn: psycopg2.extensions.connection
     with pool.getconn() as conn, conn.cursor() as cur:
         query = """
         SELECT * from sheets
@@ -227,7 +227,7 @@ def get_user_sheets(user: User, pool: SimpleConnectionPool):
         """
         cur.execute(query, (user.id,))
         conn.commit()
-        rows = cur.fetchmany()
+        rows = cur.fetchmany(10)
         results = [Sheet(
             id = row[0],
             sheet_name = row[1],

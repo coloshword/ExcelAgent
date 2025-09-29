@@ -72,3 +72,18 @@
 .hidden {
     display: none;
 }
+
+.sheet-selector-modal-sheet-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.sheet-selector-modal-sheet-selection {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between; 
+    width: 90%;
+    border: 1px solid white;
+    cursor: pointer;
+}

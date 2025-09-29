@@ -1,7 +1,7 @@
 import { checkAuthStatus, redirectToLogin, setQueryParam } from "./utils.js"
 import { ChatWidget } from "./components/ChatWidget.js";
 import { GridWidget } from "./components/GridWidget.js";
-import type { FileData, ModifySheetsIn, ModifySheetsOut } from "./models.js";
+import type { FileData, ModifySheetsIn, ModifySheetsOut, Sheet } from "./models.js";
 import  config  from "./config.js";
 
 interface PublicUser {
@@ -20,6 +20,9 @@ interface TaskResultSheetObject {
 }
 
 type AddMsg = (text: string) => void;
+
+// caching common items 
+const sheetSelectorModal = document.querySelector(".sheet-selector-modal") as HTMLDivElement;
 
 /**
  * function to display the authenticatedResource
@@ -145,7 +148,6 @@ function activateSheetSelectorModal(dataGridObj: GridWidget) {
     const createNewSheetBtn = document.querySelector(".create-new-sheet-btn") as HTMLButtonElement;
     const gridData = dataGridObj.getGridData()
     createNewSheetBtn.addEventListener('click', async () => {
-        const sheetSelectorModal = document.querySelector(".sheet-selector-modal") as HTMLDivElement;
         // make a request to create a new sheet 
         const endpoint = `${config['server_uri']}/sheets`;
         const payload: ModifySheetsIn = {
@@ -203,7 +205,7 @@ function activateHeaderFunctions(dataGridObj: GridWidget) {
 /**
  * displaySavedSheets: display the user's previous sheets
  */
-async function displaySavedSheets() {
+async function displaySavedSheets(dataGridObj: GridWidget) {
     const endpoint = `${config['server_uri']}/sheets/getUserSheets`
     const res = await fetch(endpoint, {
         method: "GET",
@@ -213,8 +215,37 @@ async function displaySavedSheets() {
             "Content-Type": "application/json"
         },
     })
-    const data = await res.json();
-    console.log(data);
+    const data: Sheet[] = await res.json();
+    const container = document.querySelector(".sheet-selector-modal-sheet-container") as HTMLDivElement;
+    for (var i = 0; i < data.length; i++) {
+        // create sheet container link 
+        const sheet = data[i] as Sheet;
+        const sheetSelection = document.createElement('div');
+        sheetSelection.classList.add("sheet-selector-modal-sheet-selection");
+        const sheetNameSpan = document.createElement('span');
+        sheetNameSpan.innerText = data[i]!.sheet_name;
+        const lastUpdatedTimeSpan = document.createElement('span');
+        const lastUpdatedTimeDate = new Date(data[i]!.last_update_time)
+        lastUpdatedTimeSpan.innerText = lastUpdatedTimeDate.toString();
+        sheetSelection.appendChild(sheetNameSpan);
+        sheetSelection.addEventListener('click', () => {
+            loadSavedSheet(sheet, dataGridObj);
+        });
+        sheetSelection.appendChild(lastUpdatedTimeSpan);
+        container.appendChild(sheetSelection)
+    }
+}
+
+/**
+ * event listener to display a saved sheet 
+ * @param sheet 
+ * @param gridWidgetObj: the grid widget instance 
+ */
+function loadSavedSheet(sheet: Sheet, gridWidgetObj: GridWidget) {
+    // do two things, set the query param to the item, and set the grid state to the sheet data 
+    gridWidgetObj.updateGridState(sheet.sheet_status);
+    sheetSelectorModal.classList.add('hidden');
+    setQueryParam("sheet_id", String(sheet.id));
 }
 
 /**
@@ -233,7 +264,7 @@ async function setUp() {
     addChatWidget(dataGridObj);
     activateSheetSelectorModal(dataGridObj);
     activateHeaderFunctions(dataGridObj);
-    displaySavedSheets();
+    displaySavedSheets(dataGridObj);
 }
 
 setUp();

@@ -157,7 +157,7 @@ def update_sheet_status(sheet_id: int, post_sheets: ModifySheetsIn, current_user
         "sheet_name": sheet_info[1]
     }
 
-@app.get("/sheets/getUserSheets", status_code=status.HTTP_200_OK)
+@app.get("/sheets/getUserSheets", response_model=List[Sheet], status_code=status.HTTP_200_OK)
 def get_user_sheets(current_user: User = Depends(auth.get_current_user), pool: SimpleConnectionPool = Depends(get_pool)):
     '''
     gets all the sheets for a current user 
